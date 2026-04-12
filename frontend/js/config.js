@@ -8,7 +8,7 @@ const APP_NAME    = 'NOOB.gg';
 const APP_VERSION = '1.0.0';
 
 /* WebSocket server URL — swap this for your actual backend */
-const WS_URL = 'wss://your-backend.example.com/ws';
+const WS_URL = 'wss://noob-gg.onrender.com/ws';
 
 /* Bot names & colors used for simulated multiplayer */
 const BOT_NAMES = ['Arjun_X', 'Neha_X', 'Rohan_X', 'Priya_X', 'Karan_X'];
