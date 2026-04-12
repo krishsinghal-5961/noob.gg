@@ -55,8 +55,12 @@ function buildPATGrid() {
     const cell       = document.createElement('div');
     cell.className   = 'pcell showing';
     cell.id          = 'pc-' + i;
-    cell.style.cssText = `--cell-color:${PAT_CELL_COLORS[i % PAT_CELL_COLORS.length]};width:${clamped}px;height:${clamped}px;font-size:${Math.max(.85, clamped * .28)}rem`;
-    cell.textContent = PAT_EMOJIS[i % PAT_EMOJIS.length];
+    cell.style.cssText = `--cell-color:${PAT_CELL_COLORS[i % PAT_CELL_COLORS.length]};width:${clamped}px;height:${clamped}px`;
+    const emoji      = document.createElement('span');
+    emoji.className  = 'pcell-emoji';
+    emoji.style.fontSize = `${Math.max(.85, clamped * .28)}rem`;
+    emoji.textContent = PAT_EMOJIS[i % PAT_EMOJIS.length];
+    cell.appendChild(emoji);
     cell.onclick     = () => patClick(i);
     grid.appendChild(cell);
   }
