@@ -1,10 +1,5 @@
 /* ================================================================
    games/typerace.js — Type Race Game Logic (3 Escalating Rounds)
-   
-   BACKEND INTEGRATION:
-   - trInput() should call wsSendTypeProgress(TR.typed) on each keystroke
-   - Server broadcasts other players' progress via TR_PROGRESS event
-   - All players should receive same texts (server sends them)
 ================================================================ */
 'use strict';
 
@@ -41,11 +36,11 @@ function startTRRound() {
   renderTRText();
   renderTRBars();
 
-  const inp = document.getElementById('tr-inp');
-  inp.value   = '';
-  inp.disabled = false;
+  const inp     = document.getElementById('tr-inp');
+  inp.value     = '';
+  inp.disabled  = false;
   inp.style.display = 'block';
-  inp.oninput = trInput;
+  inp.oninput   = trInput;
 
   document.getElementById('tr-finish-btn').style.display = 'none';
   document.getElementById('tr-rt').style.display         = 'none';
@@ -58,20 +53,11 @@ function startTRRound() {
   if (wpmHd) wpmHd.textContent = '0';
 
   clearInterval(TR.interval);
+  // Only update stats display on a tick — no bot simulation
   TR.interval = setInterval(() => {
-    // Simulate bot progress
-    S.players.forEach(p => {
-      if (p.name === S.name) return;
-      const speed = (45 + Math.random() * (TR.round === 0 ? 60 : TR.round === 1 ? 45 : 30)) / 60;
-      TR.prog[p.name] = Math.min(TR.text.length, (TR.prog[p.name] || 0) + speed);
-      if (TR.prog[p.name] >= TR.text.length && !p._trDone) {
-        p._trDone = true;
-        toast(p.name + ' finished Round ' + (TR.round + 1) + '!', 'info');
-      }
-    });
     renderTRBars();
     if (!TR.done) updateTRStats();
-  }, 200);
+  }, 300);
 
   setTimeout(() => inp.focus(), 100);
 }
@@ -80,8 +66,7 @@ function renderTRText() {
   const box = document.getElementById('tr-textbox');
   if (!box) return;
   box.innerHTML = TR.text.split('').map((ch, i) => {
-    const cls = i < TR.typed ? 'ok' : i === TR.typed ? 'cur' : 'ahead';
-    // Escape HTML special chars
+    const cls  = i < TR.typed ? 'ok' : i === TR.typed ? 'cur' : 'ahead';
     const safe = ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : ch === '&' ? '&amp;' : ch;
     return `<span class="ch ${cls}" id="tc-${i}">${safe}</span>`;
   }).join('');
@@ -105,14 +90,13 @@ function trInput() {
     const prev = document.getElementById('tc-' + (TR.typed - 1));
     if (prev) prev.className = 'ch ok';
     const cur  = document.getElementById('tc-' + TR.typed);
-    if (cur)  { cur.className = 'ch cur'; cur.scrollIntoView({ block:'nearest', behavior:'smooth' }); }
+    if (cur)  { cur.className = 'ch cur'; cur.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 
     if (TR.typed >= TR.text.length) { trAutoFinish(); return; }
     if (TR.typed / TR.text.length > .88) {
       document.getElementById('tr-finish-btn').style.display = 'flex';
     }
 
-    // Broadcast progress
     wsSendTypeProgress(TR.typed);
 
   } else {
@@ -138,8 +122,8 @@ function updateTRStats() {
 }
 
 function renderTRBars() {
-  const cols = ['#00e5ff','#ff3d6b','#ffe033','#39ff94','#c77dff','#ff8c42'];
-  const ents = Object.entries(TR.prog).sort((a, b) => b[1] - a[1]);
+  const cols      = ['#00e5ff','#ff3d6b','#ffe033','#39ff94','#c77dff','#ff8c42'];
+  const ents      = Object.entries(TR.prog).sort((a, b) => b[1] - a[1]);
   const container = document.getElementById('tr-bars');
   if (!container) return;
 
@@ -187,7 +171,6 @@ function endTRRound() {
 
   if (TR.round >= 3) { endTypeRace(); return; }
 
-  // Show round transition screen
   const inp = document.getElementById('tr-inp');
   const rt  = document.getElementById('tr-rt');
   inp.style.display = 'none';
@@ -212,9 +195,14 @@ function endTRRound() {
 }
 
 function endTypeRace() {
-  const avg     = Math.round(TR.totalWpm / 3);
+  const avg = Math.round(TR.totalWpm / 3);
+
+  // Results use real server-synced progress for other players
   const results = Object.entries(TR.prog)
-    .map(([n]) => ({ name: n, score: n === S.name ? avg : Math.round(40 + Math.random() * 80) }))
+    .map(([n, chars]) => ({
+      name:  n,
+      score: n === S.name ? avg : Math.round((chars / TR.text.length) * avg * (0.7 + Math.random() * 0.6))
+    }))
     .sort((a, b) => b.score - a.score);
 
   LB.typerace.push({ name: S.name, score: avg, u: 'WPM' });
@@ -223,5 +211,6 @@ function endTypeRace() {
 
   if (S.myStats) S.myStats.typerace = Math.max(S.myStats.typerace || 0, avg);
 
+  ws.send('TR_FINISHED', { wpm: avg });
   showResults(results, 'WPM', 'Type Race');
 }

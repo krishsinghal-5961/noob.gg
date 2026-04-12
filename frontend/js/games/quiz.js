@@ -1,18 +1,11 @@
 /* ================================================================
    games/quiz.js — Quiz Battle Game Logic
-   
-   BACKEND INTEGRATION:
-   - Questions should come from server via WS QUIZ_QUESTIONS event
-   - pickQZ() should send QUIZ_ANSWER event to server
-   - Server validates and broadcasts scores to all players
 ================================================================ */
 'use strict';
 
 const QZ = {
   qs: [], ci: 0, scores: {}, timer: null, tLeft: 0, answered: false
 };
-
-/* ── SETUP CONTROLS ── */
 
 function setQCount(n, btn) {
   S.quizQs = n;
@@ -26,14 +19,12 @@ function setQTime(t, btn) {
   if (btn) btn.classList.add('active');
 }
 
-/* ── START ── */
 function startQuiz() {
-  const count = S.quizQs || 5;
-  // Shuffle and slice the question bank
+  const count   = S.quizQs || 5;
   const shuffled = [...QUIZ_BANK].sort(() => Math.random() - .5);
-  QZ.qs = shuffled.slice(0, count);
-  QZ.ci = 0;
-  QZ.scores = {};
+  QZ.qs      = shuffled.slice(0, count);
+  QZ.ci      = 0;
+  QZ.scores  = {};
   S.players.forEach(p => QZ.scores[p.name] = 0);
 
   showPage('pg-quiz');
@@ -45,13 +36,13 @@ function showQZ() {
   clearInterval(QZ.timer);
   QZ.tLeft = S.quizSecs;
 
-  const q   = QZ.qs[QZ.ci];
+  const q    = QZ.qs[QZ.ci];
   const syms = ['A', 'B', 'C', 'D'];
 
-  document.getElementById('quiz-qnum').textContent       = `Q ${QZ.ci + 1} / ${QZ.qs.length}`;
-  document.getElementById('quiz-qtext').textContent      = q.q;
-  document.getElementById('quiz-my-score').textContent   = QZ.scores[S.name] || 0;
-  document.getElementById('quiz-pts-display').textContent= QZ.scores[S.name] || 0;
+  document.getElementById('quiz-qnum').textContent        = `Q ${QZ.ci + 1} / ${QZ.qs.length}`;
+  document.getElementById('quiz-qtext').textContent       = q.q;
+  document.getElementById('quiz-my-score').textContent    = QZ.scores[S.name] || 0;
+  document.getElementById('quiz-pts-display').textContent = QZ.scores[S.name] || 0;
 
   document.getElementById('quiz-opts').innerHTML = q.opts.map((o, i) => `
     <button class="qopt" onclick="pickQZ(${i})">
@@ -71,7 +62,11 @@ function tickQZ() {
     updateQZTimer();
     if (QZ.tLeft <= 0) {
       clearInterval(QZ.timer);
-      if (!QZ.answered) { toast('⏰ Time\'s up!', 'warn'); botQZ(); revealQZ(); setTimeout(nextQZ, 3000); }
+      if (!QZ.answered) {
+        toast('⏰ Time\'s up!', 'warn');
+        revealQZ();
+        setTimeout(nextQZ, 3000);
+      }
     }
   }, 1000);
 }
@@ -98,14 +93,11 @@ function pickQZ(idx) {
     document.getElementById('quiz-my-score').textContent    = QZ.scores[S.name];
     document.getElementById('quiz-pts-display').textContent = QZ.scores[S.name];
     toast('✓ Correct! +' + pts + ' pts ⚡', 'ok');
-
-    // Broadcast score to server
     wsSendQuizScore(QZ.scores[S.name]);
   } else {
     toast('✗ Wrong answer!', 'err');
   }
 
-  botQZ();
   revealQZ();
   setTimeout(nextQZ, 3000);
 }
@@ -115,14 +107,6 @@ function revealQZ() {
   document.querySelectorAll('.qopt').forEach((o, i) => {
     o.classList.add('locked');
     o.classList.add(i === q.correct ? 'correct' : 'wrong');
-  });
-  updateQZLB();
-}
-
-function botQZ() {
-  S.players.forEach(p => {
-    if (p.name === S.name) return;
-    if (Math.random() < .65) QZ.scores[p.name] = (QZ.scores[p.name] || 0) + 1000 + Math.round(Math.random() * 800);
   });
   updateQZLB();
 }
@@ -149,17 +133,17 @@ function nextQZ() {
 
 function endQuiz() {
   clearInterval(QZ.timer);
+
   const results = Object.entries(QZ.scores)
     .map(([n, s]) => ({ name: n, score: s }))
     .sort((a, b) => b.score - a.score);
 
-  // Update local leaderboard
   LB.quiz.push({ name: S.name, score: QZ.scores[S.name] || 0 });
   LB.quiz.sort((a, b) => b.score - a.score);
   LB.quiz = LB.quiz.slice(0, 5);
 
-  // Update my stats
   if (S.myStats) S.myStats.quiz = Math.max(S.myStats.quiz || 0, QZ.scores[S.name] || 0);
 
+  ws.send('QUIZ_FINISHED', {});
   showResults(results, 'pts', 'Quiz Battle');
 }

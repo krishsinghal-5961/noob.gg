@@ -1,10 +1,5 @@
 /* ================================================================
    games/wordbomb.js — Word Bomb Game Logic
-   
-   BACKEND INTEGRATION:
-   - submitWBWord() should ws.send('WB_WORD', { word, syl }) 
-   - Server validates, broadcasts to all, then calls passWBBomb
-   - Server tracks whose turn it is — remove client-side turn logic
 ================================================================ */
 'use strict';
 
@@ -17,13 +12,13 @@ const WB = {
 function isValidWord(word, syl) {
   const w = word.toUpperCase();
   const s = syl.toUpperCase();
-  if (!w.includes(s))         return { ok: false, reason: `Must contain "${s}"` };
-  if (w.length < 3)           return { ok: false, reason: 'Too short (min 3 letters)' };
-  if (!/^[A-Z]+$/.test(w))    return { ok: false, reason: 'Letters only!' };
+  if (!w.includes(s))          return { ok: false, reason: `Must contain "${s}"` };
+  if (w.length < 3)            return { ok: false, reason: 'Too short (min 3 letters)' };
+  if (!/^[A-Z]+$/.test(w))     return { ok: false, reason: 'Letters only!' };
   const known = SYLLABLE_VALID_WORDS[s] || [];
-  if (known.includes(w))      return { ok: true };
+  if (known.includes(w))       return { ok: true };
   if (WORD_DICT.has(w.toLowerCase())) return { ok: true };
-  if (w.length >= 7)          return { ok: true }; // benefit of doubt for long words
+  if (w.length >= 7)           return { ok: true };
   return { ok: false, reason: `"${w}" not recognised as a valid word` };
 }
 
@@ -35,7 +30,7 @@ function startWordBomb() {
   WB.done    = false;
   WB.players = S.players.map(p => ({ name: p.name, lives: 3, alive: true, isMe: p.name === S.name }));
 
-  const inp = document.getElementById('wb-inp');
+  const inp   = document.getElementById('wb-inp');
   inp.onkeydown = e => { if (e.key === 'Enter') submitWBWord(); };
 
   renderWBPlayers();
@@ -70,33 +65,34 @@ function startWBTurn() {
   if (!p)    return;
   const isMe = p.isMe;
   const inp  = document.getElementById('wb-inp');
-  inp.value  = '';
+  inp.value         = '';
   inp.style.display = isMe ? 'block' : 'none';
 
   setWBFeedback(isMe ? `Your turn! Contains "${WB.syl}"` : p.name + ' is typing...', '');
 
-  WB.total  = isMe ? 12 : 3 + Math.random() * 5;
+  // My turn: full 12 seconds. Other real players: show waiting state, no fake timer
+  WB.total  = 12;
   WB.tLeft  = WB.total;
 
   clearInterval(WB.timer);
   const bomb = document.getElementById('wb-bomb');
 
-  WB.timer = setInterval(() => {
-    WB.tLeft -= 0.1;
-    const pct = Math.max(0, WB.tLeft / WB.total * 100);
-    const tbar = document.getElementById('wb-tbar');
-    if (tbar) tbar.style.width = pct + '%';
-    if (bomb) bomb.className = 'wb-bomb ' + (WB.tLeft > WB.total * .6 ? 'slow' : WB.tLeft > WB.total * .25 ? 'med' : 'fast');
+  if (isMe) {
+    WB.timer = setInterval(() => {
+      WB.tLeft -= 0.1;
+      const pct  = Math.max(0, WB.tLeft / WB.total * 100);
+      const tbar = document.getElementById('wb-tbar');
+      if (tbar) tbar.style.width = pct + '%';
+      if (bomb) bomb.className = 'wb-bomb ' + (WB.tLeft > WB.total * .6 ? 'slow' : WB.tLeft > WB.total * .25 ? 'med' : 'fast');
+      if (WB.tLeft <= 0) {
+        clearInterval(WB.timer);
+        bombExplodes();
+      }
+    }, 100);
+    setTimeout(() => inp.focus(), 100);
+  }
+  // For other players, their answer comes via WS WB_WORD event from server
 
-    if (WB.tLeft <= 0) {
-      clearInterval(WB.timer);
-      isMe ? bombExplodes() : botWBAnswer();
-    } else if (!isMe && WB.tLeft <= WB.total - 1.2) {
-      botWBAnswer();
-    }
-  }, 100);
-
-  if (isMe) setTimeout(() => inp.focus(), 100);
   renderWBPlayers();
 }
 
@@ -132,7 +128,7 @@ function submitWBWord() {
   flashWBInp('ok');
   inp.value = '';
 
-  // In multiplayer: ws.send('WB_WORD', { word, syl: WB.syl });
+  ws.send('WB_WORD', { word, syl: WB.syl });
   newWBSyl();
   passWBBomb();
 }
@@ -141,22 +137,6 @@ function flashWBInp(type) {
   const inp = document.getElementById('wb-inp');
   inp.className = 'wb-inp ' + type;
   setTimeout(() => inp.className = 'wb-inp', 400);
-}
-
-function botWBAnswer() {
-  clearInterval(WB.timer);
-  const p    = WB.players[WB.cur];
-  const pool = (SYLLABLE_VALID_WORDS[WB.syl] || []).filter(w => !WB.used.has(w));
-
-  if (pool.length && Math.random() > .2) {
-    const w = pool[Math.floor(Math.random() * pool.length)];
-    WB.used.add(w);
-    toast(p.name + ' said "' + w + '" ✓', 'info');
-    newWBSyl();
-    passWBBomb();
-  } else {
-    bombExplodes();
-  }
 }
 
 function bombExplodes() {
@@ -205,5 +185,6 @@ function endWordBomb() {
   LB.wordbomb.sort((a, b) => b.score - a.score);
   LB.wordbomb = LB.wordbomb.slice(0, 5);
 
+  ws.send('WB_SCORE', { score: WB.rnd });
   showResults(results, '❤️', 'Word Bomb');
 }

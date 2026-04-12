@@ -1,10 +1,5 @@
 /* ================================================================
    games/memory.js — Memory Lock (Pattern) Game Logic
-   
-   BACKEND INTEGRATION:
-   - Each correct patClick() should ws.send('PAT_CLICK', { idx })
-   - Server validates sequence and broadcasts scores
-   - nextPATRound() should wait for SERVER to send next sequence
 ================================================================ */
 'use strict';
 
@@ -49,19 +44,19 @@ function buildPATGrid() {
   const clamped = Math.max(48, Math.min(88, cellSz));
 
   grid.style.cssText = `grid-template-columns:repeat(${PAT.size},1fr);gap:${gap}px`;
-  grid.innerHTML = '';
+  grid.innerHTML     = '';
 
   for (let i = 0; i < PAT.size * PAT.size; i++) {
-    const cell       = document.createElement('div');
-    cell.className   = 'pcell showing';
-    cell.id          = 'pc-' + i;
+    const cell         = document.createElement('div');
+    cell.className     = 'pcell showing';
+    cell.id            = 'pc-' + i;
     cell.style.cssText = `--cell-color:${PAT_CELL_COLORS[i % PAT_CELL_COLORS.length]};width:${clamped}px;height:${clamped}px`;
-    const emoji      = document.createElement('span');
-    emoji.className  = 'pcell-emoji';
+    const emoji        = document.createElement('span');
+    emoji.className    = 'pcell-emoji';
     emoji.style.fontSize = `${Math.max(.85, clamped * .28)}rem`;
-    emoji.textContent = PAT_EMOJIS[i % PAT_EMOJIS.length];
+    emoji.textContent  = PAT_EMOJIS[i % PAT_EMOJIS.length];
     cell.appendChild(emoji);
-    cell.onclick     = () => patClick(i);
+    cell.onclick       = () => patClick(i);
     grid.appendChild(cell);
   }
 }
@@ -94,11 +89,9 @@ function nextPATRound() {
   document.getElementById('pat-status').textContent = 'Watch the sequence (' + PAT.seq.length + '→' + (PAT.seq.length + 1) + ' steps)';
   document.getElementById('pat-hint').textContent   = '';
 
-  // Increase grid size at milestones
   if (PAT.round === 5 && PAT.size < 4) { PAT.size = 4; buildPATGrid(); }
   if (PAT.round === 9 && PAT.size < 5) { PAT.size = 5; buildPATGrid(); }
 
-  // Speed up
   PAT.intervalMs = Math.max(200, 600 - PAT.round * 35);
   updatePATSpeedBadge();
 
@@ -140,20 +133,14 @@ function patClick(idx) {
   const cell = document.getElementById('pc-' + idx);
 
   if (idx === PAT.seq[PAT.inp.length - 1]) {
-    // Correct click
     if (cell) { cell.classList.add('ok-press'); setTimeout(() => cell.classList.remove('ok-press'), 200); }
 
     if (PAT.inp.length === PAT.seq.length) {
-      // Full sequence matched!
       PAT.canInput = false;
       PAT.scores[S.name] = (PAT.scores[S.name] || 0) + PAT.round;
 
-      // Bots succeed with some probability
-      S.players.forEach(p => {
-        if (p.name !== S.name && Math.random() > .28) {
-          PAT.scores[p.name] = (PAT.scores[p.name] || 0) + PAT.round;
-        }
-      });
+      // Broadcast real score to server — other players' scores come via WS PAT_SCORE
+      ws.send('PAT_CLICK', { score: PAT.scores[S.name] });
 
       renderPATScores();
       document.getElementById('pat-status').textContent = '✓ Correct! Round ' + (PAT.round + 1) + ' coming...';
@@ -165,19 +152,13 @@ function patClick(idx) {
       setTimeout(nextPATRound, 1300);
     }
   } else {
-    // Wrong click
     if (cell) cell.classList.add('bad-press');
     PAT.canInput = false;
     document.getElementById('pat-status').textContent = '✗ Wrong! Sequence broken.';
     document.getElementById('pat-hint').textContent   = 'You reached round ' + PAT.round;
     toast('Wrong! You reached round ' + PAT.round, 'err');
 
-    // Bots continue scoring
-    S.players.forEach(p => {
-      if (p.name !== S.name) {
-        PAT.scores[p.name] = (PAT.scores[p.name] || 0) + Math.floor(Math.random() * (PAT.round + 3));
-      }
-    });
+    ws.send('PAT_CLICK', { score: PAT.scores[S.name] });
     renderPATScores();
     setTimeout(endPattern, 1600);
   }
