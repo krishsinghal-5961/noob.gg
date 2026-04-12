@@ -1,0 +1,230 @@
+/* ================================================================
+   responsive.css — Media Queries for Tablet & Mobile
+================================================================ */
+
+/* ── TABLET (≤ 768px) ── */
+@media(max-width: 768px) {
+
+  #pg-quiz-setup .body { padding: 1rem; }
+  .games-grid { grid-template-columns: 1fr; gap: .875rem; }
+  .lb-grid    { grid-template-columns: repeat(2,1fr); gap: .75rem; }
+  .topbar     { padding: .6rem 1rem; }
+  .topbar-title { font-size: .8rem; }
+  .rcode      { font-size: 1.8rem; letter-spacing: .2em; }
+  .room-code-area { flex-direction: column; align-items: flex-start; gap: .75rem; }
+
+  /* Chat */
+  .chat-layout { flex-direction: column; overflow: hidden; }
+  .chat-rooms  { width: 100%; height: auto; max-height: 110px; border-right: none; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .chat-rooms-hd { padding: .4rem 1rem; }
+  .chat-room-list { display: flex; flex-direction: row; overflow-x: auto; gap: .4rem; padding: .5rem; }
+  .chat-room-item { white-space: nowrap; border-radius: 999px; padding: .4rem .875rem; background: var(--ink3); border: 1px solid var(--border); }
+  .chat-room-item.active { background: rgba(0,229,255,.12); border-color: rgba(0,229,255,.3); }
+  .chat-main  { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .chat-hd    { padding: .65rem 1rem; }
+  .chat-msgs  { padding: .875rem; }
+  .chat-input-row { padding: .65rem .875rem; }
+  .msg        { max-width: 88%; }
+
+  /* Friends */
+  .friends-layout  { grid-template-columns: 1fr; overflow: visible; }
+  .friends-sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 200px; overflow-y: auto; }
+  .friend-list     { display: flex; flex-direction: row; overflow-x: auto; gap: .5rem; padding: .5rem; }
+  .friend-item     { flex-direction: column; align-items: center; text-align: center; min-width: 72px; padding: .5rem .35rem; gap: .35rem; border-radius: 10px; background: var(--ink3); border: 1px solid var(--border); }
+  .f-info  { min-width: 0; width: 100%; }
+  .f-name  { font-size: .72rem; }
+  .f-status { font-size: .62rem; }
+  .profile-panel { padding: 1rem; }
+  .profile-hero  { gap: 1rem; }
+  .profile-av-lg { width: 60px; height: 60px; font-size: 1.5rem; }
+  .profile-name  { font-size: 1.1rem; }
+  .stats-grid    { grid-template-columns: repeat(3,1fr); gap: .5rem; }
+  .stat-box      { padding: .75rem .5rem; }
+  .stat-val      { font-size: 1.3rem; }
+
+  /* Quiz */
+  .quiz-q-card   { padding: 1.25rem; }
+  .quiz-q-text   { font-size: 1.1rem; }
+  .quiz-opts-grid { grid-template-columns: 1fr 1fr; gap: .6rem; }
+  .qopt          { padding: .875rem .75rem; font-size: .9rem; border-radius: 12px; }
+  .quiz-body     { padding: 1rem; gap: .875rem; }
+  .quiz-clock    { font-size: 2.2rem; }
+
+  /* Reflex */
+  .reflex-body   { padding: 1rem; gap: 1rem; }
+  .reflex-zone   { width: min(320px, 92vw); height: 190px; }
+  .reflex-mini-stats { gap: 1rem; }
+  .r-pcard       { min-width: 90px; padding: .65rem .875rem; }
+  .r-pscore      { font-size: 1.2rem; }
+
+  /* Word Bomb */
+  .wb-body       { padding: 1rem; gap: 1rem; }
+  .wb-bomb       { font-size: 4rem; }
+  .wb-syllable   { font-size: 2.8rem; }
+  .wb-pcard      { min-width: 78px; padding: .5rem .75rem; }
+  .wb-inp        { font-size: 1.1rem; padding: .75rem 1rem; }
+
+  /* Memory Lock */
+  .pat-body  { padding: 1rem; gap: 1rem; }
+
+  /* Type Race */
+  .tr-body       { padding: 1rem; gap: .875rem; }
+  .tr-stats-row  { grid-template-columns: repeat(2,1fr); gap: .6rem; }
+  .tr-stat-v     { font-size: 1.2rem; }
+  .tr-bar-name   { min-width: 75px; font-size: .72rem; }
+  .tr-text-box   { padding: 1rem; font-size: .9rem; line-height: 1.8; }
+  .tr-round-badge { font-size: .65rem; }
+
+  /* Results */
+  #pg-results    { padding: 1.25rem; gap: 1.25rem; }
+  .res-hero      { font-size: 1.8rem; }
+  .podium        { gap: .5rem; }
+  .pod           { min-width: 85px; padding: .75rem .5rem; }
+  .pod-1         { height: 145px; }
+  .pod-2         { height: 110px; }
+  .pod-3         { height: 85px; }
+  .pod-emoji     { font-size: 1.4rem; }
+  .pod-name      { font-size: .75rem; }
+  .pod-score     { font-size: .8rem; }
+  .full-list     { max-width: 100%; }
+  .q-opts-g      { grid-template-columns: 1fr; }
+
+  /* Landing */
+  #pg-landing    { padding: 1.5rem; gap: 1.5rem; }
+  .land-title    { font-size: 3.5rem; }
+  .land-glow     { width: 80px; height: 80px; font-size: 2.4rem; }
+}
+
+/* ── PHONE (≤ 480px) ── */
+@media(max-width: 480px) {
+  .land-title    { font-size: 2.8rem; letter-spacing: .03em; }
+  .land-sub      { font-size: .62rem; letter-spacing: .25em; }
+  .land-form     { gap: .6rem; }
+  .gc-desc       { font-size: .8rem; }
+  .gc-name       { font-size: .85rem; }
+  .lb-grid       { grid-template-columns: 1fr; }
+  .lb-card       { padding: .875rem; }
+  .topbar        { padding: .55rem .875rem; }
+  .topbar-title  { font-size: .75rem; letter-spacing: .04em; }
+  .user-pill span { display: none; }
+  .user-pill     { padding: .3rem .5rem; }
+  .rcode         { font-size: 1.6rem; letter-spacing: .15em; }
+  .p-row         { padding: .55rem .75rem; gap: .65rem; }
+  .p-av          { width: 32px; height: 32px; }
+  .chat-inp      { font-size: .85rem; padding: .6rem .875rem; }
+  .msg-bubble    { font-size: .83rem; padding: .5rem .75rem; }
+  .quiz-opts-grid { grid-template-columns: 1fr 1fr; gap: .5rem; }
+  .qopt          { padding: .75rem .6rem; font-size: .83rem; border-radius: 10px; gap: .5rem; }
+  .qopt-sym      { width: 1.6rem; height: 1.6rem; font-size: .85rem; border-radius: 5px; flex-shrink: 0; }
+  .quiz-clock    { font-size: 1.9rem; }
+  .quiz-q-text   { font-size: 1rem; }
+  .quiz-qnum     { font-size: .68rem; }
+  .qlb-row       { font-size: .8rem; }
+  .reflex-zone   { width: min(300px, 94vw); height: 170px; }
+  .r-pcard       { min-width: 78px; padding: .5rem .75rem; }
+  .r-pscore      { font-size: 1.1rem; }
+  .r-ms          { font-size: 2.8rem; }
+  .rmstat-v      { font-size: 1.1rem; }
+  .reflex-sboard { gap: .5rem; }
+  .wb-syllable   { font-size: 2.4rem; }
+  .wb-bomb       { font-size: 3.5rem; }
+  .wb-pcard      { min-width: 70px; padding: .45rem .6rem; }
+  .wb-pname      { font-size: .7rem; max-width: 70px; }
+  .wb-hearts     { font-size: .75rem; }
+  .wb-inp        { font-size: 1rem; padding: .65rem .875rem; }
+  .pat-body      { padding: .875rem; gap: .875rem; }
+  .psc           { min-width: 78px; padding: .55rem .75rem; }
+  .psc-val       { font-size: 1.2rem; }
+  .pat-status    { font-size: .72rem; letter-spacing: .08em; }
+  .pat-speed-badge { font-size: .6rem; }
+  .tr-text-box   { font-size: .85rem; padding: .875rem; line-height: 1.75; }
+  .tr-inp        { font-size: .85rem; padding: .7rem .875rem; }
+  .tr-bar-name   { min-width: 60px; font-size: .68rem; }
+  .tr-stats-row  { grid-template-columns: repeat(2,1fr); gap: .5rem; }
+  .tr-stat       { padding: .6rem; }
+  .tr-stat-v     { font-size: 1.1rem; }
+  .tr-stat-l     { font-size: .55rem; }
+  .tr-round-badge { font-size: .6rem; padding: .2rem .5rem; }
+  .tr-rt-title   { font-size: 1.2rem; }
+  .res-hero      { font-size: 1.5rem; }
+  .podium        { gap: .35rem; }
+  .pod           { min-width: 75px; padding: .6rem .4rem; }
+  .pod-1         { height: 130px; }
+  .pod-2         { height: 98px; }
+  .pod-3         { height: 75px; }
+  .pod-emoji     { font-size: 1.2rem; }
+  .pod-name      { font-size: .7rem; }
+  .pod-score     { font-size: .72rem; }
+  .fl-row        { font-size: .8rem; padding: .38rem 0; }
+  .res-btns      { flex-direction: column; align-items: stretch; }
+  .res-btns .btn { width: 100%; }
+  .profile-hero  { flex-direction: column; gap: .875rem; }
+  .profile-av-lg { width: 56px; height: 56px; font-size: 1.4rem; }
+  .profile-name  { font-size: 1rem; }
+  .stats-grid    { grid-template-columns: repeat(3,1fr); gap: .4rem; }
+  .stat-box      { padding: .6rem .4rem; }
+  .stat-val      { font-size: 1.1rem; }
+  .stat-lbl      { font-size: .55rem; }
+  .gstat-row     { padding: .65rem .875rem; gap: .75rem; }
+  .gstat-icon    { font-size: 1.2rem; }
+  .gstat-name    { font-size: .82rem; }
+  .gstat-score   { font-size: .88rem; }
+  .bn-label      { display: none; }
+  .bn-icon       { font-size: 1.5rem; }
+  .bn-item       { padding: .6rem; }
+}
+
+/* ── VERY SMALL (≤ 360px) ── */
+@media(max-width: 360px) {
+  .land-title     { font-size: 2.3rem; }
+  .quiz-opts-grid { grid-template-columns: 1fr; }
+  .qopt           { padding: .75rem; }
+  .wb-players-row { gap: .4rem; }
+  .wb-pcard       { min-width: 62px; padding: .4rem .5rem; }
+  .reflex-zone    { height: 155px; }
+  .tr-stats-row   { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── TOUCH-FRIENDLY TAP TARGETS ── */
+@media(hover: none) {
+  .qopt, .game-card, .sb-item, .bn-item,
+  .friend-item, .chat-room-item { -webkit-tap-highlight-color: transparent; }
+  .btn { min-height: 44px; }
+  .r-target { width: 80px; height: 80px; font-size: 1.8rem; }
+
+  /* Prevent iOS auto-zoom on focus */
+  .wb-inp, .tr-inp, .chat-inp, .inp, #name-inp { font-size: 16px !important; }
+}
+
+/* ── LANDSCAPE COMPACT (phones rotated) ── */
+@media(max-height: 500px) and (orientation: landscape) {
+  /* Hide bottom nav — wastes too much vertical real estate */
+  .bottom-nav { display: none !important; }
+
+  /* Compact game screens */
+  .game-screen, .result-screen { gap: .4rem; }
+
+  /* Hide decorative / non-essential elements */
+  .land-tagline,
+  .land-sub,
+  .land-glow,
+  .pat-hint,
+  .wb-bomb { display: none; }
+
+  /* Shrink reflex zone */
+  .reflex-zone { height: 120px; }
+
+  /* Tighten padding on all game bodies */
+  .reflex-body,
+  .wb-body,
+  .quiz-body,
+  .pat-body,
+  .tr-body { padding: .5rem; gap: .5rem; }
+
+  /* Shrink topbar */
+  .topbar { padding: .4rem .875rem; }
+
+  /* Landing page tighter */
+  #pg-landing { gap: .75rem; padding: .75rem; }
+  .land-title  { font-size: 2.2rem; }
+}

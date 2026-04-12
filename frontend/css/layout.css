@@ -1,0 +1,172 @@
+/* ================================================================
+   layout.css — App Shell, Sidebar, Bottom Nav, Page System
+================================================================ */
+
+/* ── APP SHELL ── */
+#app {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── SIDEBAR (desktop) ── */
+.sidebar {
+  width: 64px;
+  background: var(--ink2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+  gap: .5rem;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 200;
+  transition: width .3s;
+}
+.sidebar.expanded { width: 220px; }
+
+.sb-logo {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--c1), var(--c2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: .75rem;
+  padding: .5rem;
+  letter-spacing: .05em;
+}
+.sb-logo-dot {
+  color: var(--c2);
+  -webkit-text-fill-color: var(--c2);
+}
+
+.sb-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: .875rem;
+  padding: .7rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all .2s;
+  color: var(--muted);
+  font-size: .85rem;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+.sb-item:hover { background: var(--ink3); color: var(--text); }
+.sb-item.active { background: rgba(0,229,255,.1); color: var(--c1); }
+.sb-item.active .sb-icon { filter: drop-shadow(0 0 6px var(--c1)); }
+.sb-icon { font-size: 1.2rem; flex-shrink: 0; width: 24px; text-align: center; }
+.sb-label { white-space: nowrap; opacity: 0; transition: opacity .25s; font-family: 'DM Sans', sans-serif; }
+.sidebar.expanded .sb-label { opacity: 1; }
+
+.sb-notif {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c2);
+  display: none;
+}
+.sb-notif.on { display: block; }
+
+.sb-toggle {
+  margin-top: auto;
+  cursor: pointer;
+  padding: .7rem;
+  color: var(--muted);
+  font-size: 1.1rem;
+  transition: color .2s;
+}
+.sb-toggle:hover { color: var(--text); }
+.sb-divider {
+  width: 80%;
+  height: 1px;
+  background: var(--border);
+  margin: .25rem 0;
+}
+
+/* ── MAIN AREA ── */
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ── PAGE / SCREEN VISIBILITY ── */
+.page, .game-screen, .result-screen {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+}
+.page.on, .game-screen.on, .result-screen.on { display: flex; }
+
+/* ── BOTTOM NAV (mobile only) ── */
+.bottom-nav {
+  display: none; /* shown via JS on mobile */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(8,9,13,.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  padding: .5rem 0 max(.5rem, env(safe-area-inset-bottom));
+  z-index: 200;
+  justify-content: space-around;
+}
+.bn-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+  padding: .5rem 1.25rem;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all .2s;
+  color: var(--muted);
+  position: relative;
+}
+.bn-item:hover { color: var(--text); }
+.bn-item.active { color: var(--c1); }
+.bn-item.active .bn-icon { filter: drop-shadow(0 0 6px var(--c1)); }
+.bn-icon  { font-size: 1.4rem; }
+.bn-label { font-family: 'JetBrains Mono', monospace; font-size: .6rem; letter-spacing: .08em; }
+.bn-dot {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c2);
+  display: none;
+  border: 1.5px solid var(--ink);
+}
+.bn-dot.on { display: block; }
+
+/* ── PRE-LOGIN: hide nav until user enters name ── */
+#app.pre-login .sidebar    { display: none !important; }
+#app.pre-login .bottom-nav { display: none !important; }
+
+/* ── MOBILE PADDING for bottom nav ── */
+@media(max-width: 768px) {
+  .main-area { padding-bottom: 68px; }
+  .sidebar   { display: none !important; }
+  .bottom-nav { display: flex; }
+}
+@media(min-width: 769px) {
+  .bottom-nav { display: none !important; }
+}
