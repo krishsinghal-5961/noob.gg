@@ -29,8 +29,8 @@ function enterLobby() {
   toast('Welcome, ' + v + '! 🎮', 'ok');
 
   // Attempt WebSocket connection
-  // ws.connect(WS_URL);   // ← Uncomment when backend is ready
-  // ws.send('AUTH', { name: v });
+  ws.connect(WS_URL);   // ← Uncomment when backend is ready
+  ws.send('AUTH', { name: v });
 }
 
 function _initPlayerData() {
