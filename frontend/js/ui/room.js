@@ -1,57 +1,25 @@
 /* ================================================================
    ui/room.js — Room Creation, Joining, Player List
-   
-   BACKEND INTEGRATION: Replace createRoom() / joinRoom() to call
-   ws.send('CREATE_ROOM', ...) and ws.send('JOIN_ROOM', ...).
-   The server responds with ROOM_CREATED / ROOM_JOINED events
-   (handled in websocket.js).
+   Fully wired to backend via WebSocket.
 ================================================================ */
 'use strict';
 
 function createRoom() {
   if (!S.name) { toast('Enter your name first!', 'err'); return; }
+  if (!ws.connected) { toast('Not connected to server!', 'err'); return; }
   closeModals();
-
-  // Generate a local room code (server will override this in real multiplayer)
-  S.code = Math.random().toString(36).substring(2, 8).toUpperCase();
-  S.isHost = true;
-
-  // Simulate bot players joining
-  const botCount = 1 + Math.floor(Math.random() * 3);
-  S.players = [
-    { name: S.name, color: BOT_COLS[0], isMe: true, ready: false }
-  ];
-  BOT_NAMES.slice(0, botCount).forEach((n, i) => {
-    S.players.push({ name: n, color: BOT_COLS[i + 1], isMe: false, ready: true });
-  });
-
-  // In multiplayer, send this instead:
-  // ws.send('CREATE_ROOM', { game: S.game, type: S.roomType, name: S.name });
-
-  showPage('pg-room');
-  renderRoom();
-  toast('Room created! Code: ' + S.code, 'ok');
+  ws.send('CREATE_ROOM', { game: S.game, roomType: S.roomType || 'public' });
+  // Server responds with ROOM_CREATED → handled in websocket.js
 }
 
 function joinRoom() {
   const code = document.getElementById('join-code-inp').value.trim().toUpperCase();
   if (!code || code.length !== 6) { toast('Enter a valid 6-letter code!', 'err'); return; }
   if (!S.name) { toast('Enter your name first!', 'err'); return; }
+  if (!ws.connected) { toast('Not connected to server!', 'err'); return; }
   closeModals();
-
-  S.code = code;
-  S.isHost = false;
-  S.players = [
-    { name: BOT_NAMES[0], color: BOT_COLS[0], isMe: false, ready: true },
-    { name: S.name,       color: BOT_COLS[1], isMe: true,  ready: false },
-  ];
-
-  // In multiplayer, send this instead:
-  // ws.send('JOIN_ROOM', { code, name: S.name });
-
-  showPage('pg-room');
-  renderRoom();
-  toast('Joined room ' + code + '!', 'ok');
+  ws.send('JOIN_ROOM', { code });
+  // Server responds with ROOM_JOINED → handled in websocket.js
 }
 
 function renderRoom() {
@@ -75,15 +43,18 @@ function renderRoom() {
         <div class="p-av" style="border-color:${p.color};background:${p.color}22;color:${p.color}">
           ${p.name[0].toUpperCase()}
         </div>
-        <span style="flex:1;font-weight:600">${p.name}${p.isMe ? ' <span style="font-size:.7rem;color:var(--muted)">(You)</span>' : ''}</span>
-        ${p.isMe && S.isHost ? '<span class="badge b-host">HOST</span>' : ''}
-        ${p.isMe && !S.isHost ? '<span class="badge b-wait" id="my-ready-badge">Not Ready</span>' : ''}
-        ${!p.isMe ? `<span class="badge ${p.ready ? 'b-ready' : 'b-wait'}">${p.ready ? 'Ready ✓' : 'Waiting...'}</span>` : ''}
+        <span style="flex:1;font-weight:600">${p.name}${p.name === S.name ? ' <span style="font-size:.7rem;color:var(--muted)">(You)</span>' : ''}</span>
+        ${p.isHost ? '<span class="badge b-host">HOST</span>' : ''}
+        ${!p.isHost && p.name === S.name
+          ? `<span class="badge b-wait" id="my-ready-badge">${p.ready ? 'Ready ✓' : 'Not Ready'}</span>`
+          : ''}
+        ${p.name !== S.name
+          ? `<span class="badge ${p.ready ? 'b-ready' : 'b-wait'}">${p.ready ? 'Ready ✓' : 'Waiting...'}</span>`
+          : ''}
       </div>
     `).join('');
   }
 
-  // Show host controls or guest wait
   const hostControls = document.getElementById('host-controls');
   const guestWait    = document.getElementById('guest-wait');
   if (hostControls) hostControls.style.display = S.isHost ? 'block' : 'none';
@@ -91,15 +62,14 @@ function renderRoom() {
 }
 
 function toggleReady() {
-  const me = S.players.find(p => p.isMe);
+  const me = S.players.find(p => p.name === S.name);
   if (!me) return;
   me.ready = !me.ready;
   const btn   = document.getElementById('ready-btn');
   const badge = document.getElementById('my-ready-badge');
   if (btn)   btn.textContent   = me.ready ? '✅ Ready' : '⏳ Not Ready';
   if (badge) badge.textContent = me.ready ? 'Ready ✓'  : 'Not Ready';
-
-  // In multiplayer: ws.send('PLAYER_READY', { ready: me.ready });
+  ws.send('PLAYER_READY', { ready: me.ready });
 }
 
 function copyRoomCode() {
@@ -110,20 +80,20 @@ function copyRoomCode() {
 
 function leaveRoom() {
   resetGames();
-  // ws.send('LEAVE_ROOM', { code: S.code });
+  ws.send('LEAVE_ROOM', {});
   showPage('pg-lobby');
   showBottomNav();
 }
 
 function startGame() {
   if (!S.game) return;
-  // ws.send('START_GAME', { game: S.game });
-  _launchGame(S.game);
+  ws.send('START_GAME', {});
+  // Server broadcasts GAME_START to all players in room → _launchGame() called via websocket.js
 }
 
-/** Called either from host button OR by WS GAME_START event */
+/** Called by WS GAME_START event in websocket.js */
 function _launchGame(game) {
-  if (game === 'quiz')     { showPage('pg-quiz-setup'); }
+  if (game === 'quiz')          showPage('pg-quiz-setup');
   else if (game === 'reflex')   startReflex();
   else if (game === 'wordbomb') startWordBomb();
   else if (game === 'pattern')  startPattern();
