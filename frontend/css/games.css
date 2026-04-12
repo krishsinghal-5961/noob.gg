@@ -81,29 +81,36 @@
   display: flex;
   align-items: center;
   gap: .75rem;
-  padding: 1rem;
-  background: rgba(255,255,255,.05);
-  border: 2px solid rgba(255,255,255,.1);
+  padding: 1rem 1.1rem;
+  background: var(--qopt-bg, rgba(255,255,255,.08));
+  border: 2px solid var(--qopt-bg, rgba(255,255,255,.15));
   border-radius: 14px;
   cursor: pointer;
-  transition: all .2s;
+  transition: all .18s;
   font-size: .95rem;
-  font-weight: 500;
+  font-weight: 700;
   text-align: left;
+  color: #fff;
+  min-height: 64px;
 }
+/* Kahoot-style per-option colors */
+.qopt:nth-child(1) { --qopt-bg: #e21b3c; }
+.qopt:nth-child(2) { --qopt-bg: #1368ce; }
+.qopt:nth-child(3) { --qopt-bg: #d89e00; }
+.qopt:nth-child(4) { --qopt-bg: #26890c; }
 .qopt:hover:not(.locked) {
-  background: rgba(0,229,255,.08);
-  border-color: var(--c1);
-  transform: translateY(-1px);
+  filter: brightness(1.18);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,.4);
 }
 .qopt.locked { cursor: default; }
-.qopt.correct { background: rgba(57,255,148,.15); border-color: var(--c4); color: var(--c4); }
-.qopt.wrong   { background: rgba(255,61,107,.1);  border-color: rgba(255,61,107,.3); opacity: .6; }
+.qopt.correct { background: #39ff94 !important; border-color: #39ff94 !important; color: #000 !important; box-shadow: 0 0 20px rgba(57,255,148,.5); }
+.qopt.wrong   { background: rgba(255,255,255,.06) !important; border-color: rgba(255,255,255,.1) !important; opacity: .45; filter: none; }
 .qopt-sym {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.9rem;
+  height: 1.9rem;
   border-radius: 6px;
-  background: rgba(255,255,255,.1);
+  background: rgba(0,0,0,.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -111,6 +118,7 @@
   font-size: .85rem;
   font-weight: 700;
   flex-shrink: 0;
+  color: #fff;
 }
 .quiz-lb { padding: .875rem 1rem; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; }
 .quiz-lb-title { font-family: 'Orbitron', monospace; font-size: .65rem; letter-spacing: .15em; color: var(--muted); margin-bottom: .6rem; text-transform: uppercase; }
@@ -284,7 +292,7 @@
 }
 .pat-grid { display: grid; gap: 6px; }
 .pcell {
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--ink3);
   border: 2px solid var(--border2);
   cursor: pointer;
@@ -296,13 +304,30 @@
   user-select: none;
   min-width: 44px;
   min-height: 44px;
+  position: relative;
+  overflow: hidden;
 }
-.pcell.showing { opacity: .5; cursor: default; }
-.pcell.player-turn { opacity: 1; border-color: var(--border2); }
-.pcell.player-turn:hover { border-color: var(--c5); background: rgba(180,127,255,.08); transform: scale(.97); }
-.pcell.lit { background: var(--cell-color, var(--c1)); border-color: var(--cell-color, var(--c1)); box-shadow: 0 0 20px var(--cell-color, var(--c1)); opacity: 1; transform: scale(1.06); }
-.pcell.ok-press  { background: rgba(57,255,148,.2); border-color: var(--c4); transform: scale(.93); }
-.pcell.bad-press { background: rgba(255,61,107,.2); border-color: var(--c2); animation: shake .25s; }
+/* Hide emoji by default — only visible when lit */
+.pcell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--cell-color, var(--c1));
+  opacity: 0;
+  transition: opacity .15s;
+  border-radius: 8px;
+}
+.pcell .pcell-emoji { opacity: 0; transition: opacity .15s; font-size: 1.4rem; position: relative; z-index: 1; }
+.pcell.showing { opacity: .35; cursor: default; }
+.pcell.player-turn { opacity: 1; border-color: var(--border2); background: rgba(255,255,255,.04); }
+.pcell.player-turn:hover { border-color: var(--c5); background: rgba(180,127,255,.12); transform: scale(.97); }
+.pcell.lit::after { opacity: 1; }
+.pcell.lit .pcell-emoji { opacity: 1; }
+.pcell.lit { border-color: var(--cell-color, var(--c1)); box-shadow: 0 0 24px var(--cell-color, var(--c1)); opacity: 1; transform: scale(1.08); }
+.pcell.ok-press  { background: rgba(57,255,148,.25); border-color: var(--c4); transform: scale(.93); }
+.pcell.ok-press::after { opacity: 0; }
+.pcell.bad-press { background: rgba(255,61,107,.25); border-color: var(--c2); animation: shake .25s; }
+.pcell.bad-press::after { opacity: 0; }
 .pat-hint { font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--muted); text-align: center; min-height: 1.2em; }
 
 /* ══════════════════════════════════
