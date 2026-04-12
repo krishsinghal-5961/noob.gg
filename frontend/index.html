@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NOOB.gg — Multiplayer Arena</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+
+<!-- CSS Modules -->
+<link rel="stylesheet" href="css/base.css"/>
+<link rel="stylesheet" href="css/components.css"/>
+<link rel="stylesheet" href="css/layout.css"/>
+<link rel="stylesheet" href="css/pages.css"/>
+<link rel="stylesheet" href="css/games.css"/>
+<link rel="stylesheet" href="css/responsive.css"/>
+</head>
+<body>
+
+<div id="toasts"></div>
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar" class="sidebar">
+    <div class="sb-logo">N<span class="sb-logo-dot">.</span>gg</div>
+    <div class="sb-item active" id="sb-lobby" onclick="navTo('lobby')">
+      <span class="sb-icon">🏠</span><span class="sb-label">Lobby</span>
+    </div>
+    <div class="sb-item" id="sb-chat" onclick="navTo('chat')">
+      <span class="sb-icon">💬</span><span class="sb-label">Chat</span>
+      <div class="sb-notif" id="chat-notif"></div>
+    </div>
+    <div class="sb-item" id="sb-friends" onclick="navTo('friends')">
+      <span class="sb-icon">👥</span><span class="sb-label">Friends</span>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" title="Expand sidebar">⟩</div>
+  </div>
+
+  <!-- BOTTOM NAV (mobile only) -->
+  <div class="bottom-nav" id="bottom-nav">
+    <div class="bn-item active" id="bn-lobby" onclick="navTo('lobby')">
+      <span class="bn-icon">🏠</span><span class="bn-label">Lobby</span>
+    </div>
+    <div class="bn-item" id="bn-chat" onclick="navTo('chat')">
+      <span class="bn-icon">💬</span><span class="bn-label">Chat</span>
+      <div class="bn-dot on" id="bn-chat-dot"></div>
+    </div>
+    <div class="bn-item" id="bn-friends" onclick="navTo('friends')">
+      <span class="bn-icon">👥</span><span class="bn-label">Friends</span>
+    </div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main-area" id="main-area">
+
+    <!-- Pages (injected as includes; inlined here for single-server simplicity) -->
+    <!-- In a real build: use a bundler or server-side templating -->
+
+    <!-- LANDING PAGE -->
+    <div id="pg-landing" class="page on" style="display:flex">
+      <div class="land-glow">🎮</div>
+      <div class="land-brand">
+        <h1 class="land-title">NOOB<span class="land-dot">.gg</span></h1>
+        <p class="land-tagline">where noobs become legends</p>
+      </div>
+      <p class="land-sub">Real-Time Multiplayer Arena</p>
+      <div class="land-form">
+        <label class="inp-label">Your Gamer Tag</label>
+        <input id="name-inp" class="inp" placeholder="e.g. xX_Krish_Xx, ProNub..." maxlength="18"
+          autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"
+          readonly onfocus="this.removeAttribute('readonly')"/>
+        <button class="btn btn-cyan btn-full" onclick="enterLobby()">🎮 Enter Arena</button>
+      </div>
+      <div class="land-features">
+        <span class="feat-chip">🎯 Reflex Arena</span>
+        <span class="feat-chip">💣 Word Bomb</span>
+        <span class="feat-chip">🧠 Memory Lock</span>
+        <span class="feat-chip">⌨️ Type Race</span>
+        <span class="feat-chip">📋 Quiz Battle</span>
+        <span class="feat-chip">💬 Live Chat</span>
+        <span class="feat-chip">👥 Friends</span>
+      </div>
+      <p class="land-ws-note" id="land-ws-status">🔴 Connecting to server...</p>
+    </div>
+
+    <!-- LOBBY PAGE -->
+    <div id="pg-lobby" class="page">
+      <div class="topbar">
+        <span class="topbar-title" style="color:var(--c1)">🏠 GAME LOBBY</span>
+        <div class="topbar-right">
+          <div class="ws-indicator" id="ws-indicator" title="Server connection">
+            <div class="ws-dot" id="ws-dot"></div>
+            <span class="ws-label" id="ws-label">Offline</span>
+          </div>
+          <div class="user-pill" onclick="showMyProfile()">
+            <div class="user-avatar-sm" id="nav-av">N</div>
+            <span id="nav-uname">Player</span>
+          </div>
+        </div>
+      </div>
+      <div class="body">
+        <div>
+          <div class="section-h"><h2 style="color:var(--c1)">Choose Your Game</h2><div class="line"></div></div>
+          <div class="games-grid">
+            <div class="game-card" style="--cc:var(--c2)" onclick="openModal('reflex')">
+              <div class="gc-hd"><span class="gc-icon">🎯</span><span class="gc-badge">🔥 HOT</span></div>
+              <div class="gc-name">REFLEX ARENA</div>
+              <div class="gc-desc">A target flashes at a random position after a random delay. Click it the instant it appears. Reaction time in ms is your score. Lowest wins.</div>
+              <div class="gc-tags"><span class="gc-tag">Reaction</span><span class="gc-tag">5 Rounds</span><span class="gc-tag">Speed</span></div>
+            </div>
+            <div class="game-card" style="--cc:var(--c6)" onclick="openModal('wordbomb')">
+              <div class="gc-hd"><span class="gc-icon">💣</span><span class="gc-badge">⚡ NEW</span></div>
+              <div class="gc-name">WORD BOMB</div>
+              <div class="gc-desc">Type a real English word containing the syllable shown before the bomb explodes. Pass it around. Words are validated — no nonsense allowed.</div>
+              <div class="gc-tags"><span class="gc-tag">Vocabulary</span><span class="gc-tag">Multiplayer</span><span class="gc-tag">Lives</span></div>
+            </div>
+            <div class="game-card" style="--cc:var(--c5)" onclick="openModal('pattern')">
+              <div class="gc-hd"><span class="gc-icon">🧠</span><span class="gc-badge">🧩 BRAIN</span></div>
+              <div class="gc-name">MEMORY LOCK</div>
+              <div class="gc-desc">Watch the sequence light up on the grid, then reproduce it perfectly. Gets faster and bigger every round. How far can you go?</div>
+              <div class="gc-tags"><span class="gc-tag">Memory</span><span class="gc-tag">Pattern</span><span class="gc-tag">12 Levels</span></div>
+            </div>
+            <div class="game-card" style="--cc:var(--c1)" onclick="openModal('typerace')">
+              <div class="gc-hd"><span class="gc-icon">⌨️</span><span class="gc-badge">🏁 RACE</span></div>
+              <div class="gc-name">TYPE RACE</div>
+              <div class="gc-desc">Three escalating rounds: casual text, then technical jargon, then raw code. WPM × accuracy × round bonus = your final score.</div>
+              <div class="gc-tags"><span class="gc-tag">Typing</span><span class="gc-tag">3 Rounds</span><span class="gc-tag">WPM</span></div>
+            </div>
+            <div class="game-card" style="--cc:var(--c3)" onclick="openModal('quiz')">
+              <div class="gc-hd"><span class="gc-icon">📋</span><span class="gc-badge">🎓 SMART</span></div>
+              <div class="gc-name">QUIZ BATTLE</div>
+              <div class="gc-desc">Answer faster than your opponents for bonus points. Wrong answers score zero. Speed and accuracy both matter in this knowledge showdown.</div>
+              <div class="gc-tags"><span class="gc-tag">Knowledge</span><span class="gc-tag">5–15 Qs</span><span class="gc-tag">Timer</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- LEADERBOARDS -->
+        <div>
+          <div class="section-h"><h2 style="color:var(--c3)">🏆 Leaderboards</h2><div class="line"></div></div>
+          <div class="lb-grid" id="lb-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOM PAGE -->
+    <div id="pg-room" class="page">
+      <div class="topbar">
+        <span class="topbar-title" id="room-game-title" style="color:var(--c1)">GAME ROOM</span>
+        <div class="topbar-right">
+          <button class="btn btn-muted btn-sm" onclick="leaveRoom()">✕ Leave</button>
+        </div>
+      </div>
+      <div class="body">
+        <div class="card">
+          <div class="room-code-area">
+            <div>
+              <div class="rcode-lbl">Room Code</div>
+              <div class="rcode" id="room-code-display">------</div>
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="copyRoomCode()">📋 Copy Code</button>
+              <button class="btn btn-muted btn-sm" id="ready-btn" onclick="toggleReady()">⏳ Not Ready</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-h" style="margin-bottom:.875rem"><h2 style="font-size:.75rem">Players</h2><div class="line"></div></div>
+          <div class="players-list" id="players-list"></div>
+        </div>
+        <div id="host-controls" style="display:none">
+          <button class="btn btn-cyan btn-full" id="start-btn" onclick="startGame()">⚡ Start Game</button>
+        </div>
+        <div id="guest-wait" style="display:none;flex-direction:column;align-items:center;gap:.875rem">
+          <div class="wait-dots"><span></span><span></span><span></span></div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted)">Waiting for host to start...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUIZ SETUP PAGE -->
+    <div id="pg-quiz-setup" class="page">
+      <div class="topbar">
+        <span class="topbar-title" style="color:var(--c3)">📋 QUIZ SETUP</span>
+        <div class="topbar-right"><button class="btn btn-muted btn-sm" onclick="leaveRoom()">✕ Leave</button></div>
+      </div>
+      <div class="body">
+        <div class="card">
+          <div class="section-h" style="margin-bottom:1rem"><h2>Settings</h2><div class="line"></div></div>
+          <label class="inp-label">Number of Questions</label>
+          <div class="q-opts-g" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1.25rem">
+            <button class="btn btn-muted q-opt-btn active" onclick="setQCount(5,this)">5 Qs</button>
+            <button class="btn btn-muted q-opt-btn" onclick="setQCount(10,this)">10 Qs</button>
+            <button class="btn btn-muted q-opt-btn" onclick="setQCount(15,this)">15 Qs</button>
+          </div>
+          <label class="inp-label">Time per Question</label>
+          <div class="q-opts-g" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1.5rem">
+            <button class="btn btn-muted q-time-btn" onclick="setQTime(10,this)">10s</button>
+            <button class="btn btn-muted q-time-btn active" onclick="setQTime(20,this)">20s</button>
+            <button class="btn btn-muted q-time-btn" onclick="setQTime(30,this)">30s</button>
+          </div>
+          <button class="btn btn-cyan btn-full" onclick="startQuiz()">📋 Start Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME SCREENS -->
+    <div id="pg-quiz" class="game-screen">
+      <div class="game-hd" style="background:linear-gradient(135deg,#1a1328,#12101e)">
+        <span class="game-hd-title" style="color:var(--c3)">📋 QUIZ BATTLE</span>
+        <div class="quiz-hd-right">
+          <span class="quiz-qnum" style="color:rgba(255,255,255,.6)" id="quiz-qnum">Q 1 / 5</span>
+          <div class="quiz-timer-wrap"><span class="quiz-clock" id="quiz-clock">20</span></div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:rgba(255,255,255,.5)">pts: <span id="quiz-pts-display">0</span></span>
+        </div>
+      </div>
+      <div class="tbar-wrap"><div class="tbar" id="quiz-tbar" style="width:100%"></div></div>
+      <div class="quiz-body">
+        <div class="quiz-lb" id="quiz-my-score-bar"><span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">YOUR SCORE</span><span class="quiz-my-score" id="quiz-my-score">0</span></div>
+        <div class="quiz-q-card" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)">
+          <div class="quiz-q-text" id="quiz-qtext" style="color:#fff">Loading...</div>
+        </div>
+        <div class="quiz-opts-grid" id="quiz-opts"></div>
+        <div class="quiz-lb" id="quiz-lb"></div>
+      </div>
+    </div>
+
+    <div id="pg-reflex" class="game-screen">
+      <div class="game-hd">
+        <span class="game-hd-title" style="color:var(--c2)">🎯 REFLEX ARENA</span>
+        <span class="game-hd-info">Round <span id="r-round">1</span> / 5</span>
+      </div>
+      <div class="reflex-body">
+        <div class="reflex-sboard" id="reflex-sboard"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;width:100%">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--muted);letter-spacing:.12em;min-height:1.4em;text-align:center" id="r-status">Get ready...</div>
+          <div class="reflex-zone" id="r-zone"><div class="r-idle" id="r-idle">⬤ STANDBY</div></div>
+          <div style="min-height:80px;display:flex;align-items:center;justify-content:center" id="r-last"></div>
+        </div>
+        <div class="reflex-mini-stats">
+          <div class="rmstat"><div class="rmstat-v" id="r-best">—</div><div class="rmstat-l">Best ms</div></div>
+          <div class="rmstat"><div class="rmstat-v" id="r-avg">—</div><div class="rmstat-l">Avg ms</div></div>
+          <div class="rmstat"><div class="rmstat-v" id="r-rank">—</div><div class="rmstat-l">Rank</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pg-wordbomb" class="game-screen">
+      <div class="game-hd">
+        <span class="game-hd-title" style="color:var(--c6)">💣 WORD BOMB</span>
+        <span class="game-hd-info">Round <span id="wb-rnd">1</span></span>
+      </div>
+      <div class="wb-body">
+        <div class="wb-players-row" id="wb-players"></div>
+        <div class="wb-center">
+          <div class="wb-bomb slow" id="wb-bomb">💣</div>
+          <div class="wb-syllable" id="wb-syl">---</div>
+          <div class="wb-prompt-hint">Type a word containing this syllable</div>
+        </div>
+        <div class="tbar-wrap" style="width:100%;max-width:380px;border-radius:4px;overflow:hidden">
+          <div class="tbar" id="wb-tbar" style="width:100%"></div>
+        </div>
+        <div class="wb-input-row">
+          <input id="wb-inp" class="wb-inp" placeholder="Type a word..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+          <div class="wb-feedback" id="wb-fb">Your turn!</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pg-pattern" class="game-screen">
+      <div class="game-hd">
+        <span class="game-hd-title" style="color:var(--c5)">🧠 MEMORY LOCK</span>
+        <span class="game-hd-info">Round <span id="pat-rnd">1</span>&nbsp;<span class="pat-speed-badge" id="pat-speed-badge">Normal</span></span>
+      </div>
+      <div class="pat-body">
+        <div class="pat-scores" id="pat-scores"></div>
+        <div class="pat-status" id="pat-status">Watch the sequence...</div>
+        <div class="pat-grid" id="pat-grid"></div>
+        <div class="pat-hint" id="pat-hint"></div>
+      </div>
+    </div>
+
+    <div id="pg-typerace" class="game-screen">
+      <div class="game-hd">
+        <span class="game-hd-title" style="color:var(--c1)">⌨️ TYPE RACE</span>
+        <span class="game-hd-info">WPM: <span id="tr-wpm-hd">0</span></span>
+      </div>
+      <div class="tr-body">
+        <div class="tr-round-info">
+          <div><span id="tr-round-badge" class="tr-round-badge" style="color:var(--c4);border-color:rgba(57,255,148,.3)">Round 1 — Normal Text</span></div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">Finish all 3 rounds to win</span>
+        </div>
+        <div class="tr-race-bars" id="tr-bars"></div>
+        <div class="tr-text-box" id="tr-textbox"></div>
+        <div class="tr-inp-row">
+          <input id="tr-inp" class="tr-inp" placeholder="Click here and start typing..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+          <button class="btn btn-green" id="tr-finish-btn" onclick="trFinish()" style="display:none">🏁 Finish</button>
+        </div>
+        <div class="tr-stats-row">
+          <div class="tr-stat"><div class="tr-stat-v" id="tr-wpm">0</div><div class="tr-stat-l">WPM</div></div>
+          <div class="tr-stat"><div class="tr-stat-v" id="tr-acc">100%</div><div class="tr-stat-l">Accuracy</div></div>
+          <div class="tr-stat"><div class="tr-stat-v" id="tr-prog">0%</div><div class="tr-stat-l">Progress</div></div>
+          <div class="tr-stat"><div class="tr-stat-v" id="tr-rnd-disp">1/3</div><div class="tr-stat-l">Round</div></div>
+        </div>
+        <div class="tr-round-transition" id="tr-rt">
+          <div class="tr-rt-title" id="tr-rt-title">Round 1 Complete!</div>
+          <div class="tr-rt-sub" id="tr-rt-sub">Next round starts in 3...</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--muted)" id="tr-rt-info"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="pg-results" class="result-screen">
+      <div class="res-hero" id="res-hero">🏆 RESULTS</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase" id="res-sub">Match Over</div>
+      <div class="podium" id="res-podium"></div>
+      <div class="full-list">
+        <div class="fl-hd">Full Standings</div>
+        <div id="res-list"></div>
+      </div>
+      <div class="res-btns">
+        <button class="btn btn-cyan" onclick="playAgain()">⚡ Play Again</button>
+        <button class="btn btn-ghost" onclick="navTo('lobby')">🏠 Lobby</button>
+      </div>
+    </div>
+
+    <!-- CHAT PAGE -->
+    <div id="pg-chat" class="page" style="flex-direction:column">
+      <div class="topbar">
+        <span class="topbar-title" style="color:var(--c1)">💬 CHAT</span>
+      </div>
+      <div class="chat-layout">
+        <div class="chat-rooms">
+          <div class="chat-rooms-hd">Channels</div>
+          <div class="chat-room-list" id="chat-room-list"></div>
+        </div>
+        <div class="chat-main">
+          <div class="chat-hd">
+            <span class="chat-room-icon" id="chat-ch-icon">🌐</span>
+            <div>
+              <div class="chat-hd-name" id="chat-ch-name">Global</div>
+              <div class="chat-hd-sub" id="chat-ch-sub">All players online</div>
+            </div>
+          </div>
+          <div class="chat-msgs" id="chat-msgs"></div>
+          <div class="chat-input-row">
+            <input id="chat-inp" class="chat-inp" placeholder="Type a message..." autocomplete="off" autocorrect="off" spellcheck="false"/>
+            <button class="btn btn-cyan btn-sm" onclick="sendChat()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRIENDS PAGE -->
+    <div id="pg-friends" class="page" style="flex-direction:column">
+      <div class="topbar">
+        <span class="topbar-title" style="color:var(--c4)">👥 FRIENDS</span>
+        <div class="topbar-right">
+          <button class="btn btn-green btn-sm" onclick="openAddFriend()">+ Add Friend</button>
+        </div>
+      </div>
+      <div class="friends-layout">
+        <div class="friends-sidebar">
+          <div class="friends-hd">
+            <span class="friends-hd-title">ONLINE (<span id="friend-count">0</span>)</span>
+          </div>
+          <div class="friend-list" id="friend-list"></div>
+        </div>
+        <div class="profile-panel" id="profile-panel">
+          <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.78rem">
+            Select a friend to view profile
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- main-area -->
+</div><!-- app -->
+
+<!-- MODALS -->
+<div id="modal-room" class="overlay">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModals()">✕</button>
+    <div class="modal-title" id="modal-title">Join or Create</div>
+    <div class="tabs">
+      <button class="tab on" id="tab-create" onclick="switchTab('create')">🏠 Create Room</button>
+      <button class="tab" id="tab-join" onclick="switchTab('join')">🚪 Join Room</button>
+    </div>
+    <div id="tab-create-body">
+      <div style="display:flex;gap:.5rem;margin-bottom:1.1rem">
+        <button class="btn btn-full" id="tp-pub" style="background:rgba(57,255,148,.1);color:var(--c4);border:1px solid rgba(57,255,148,.3)" onclick="setRoomType('public')">🌐 Public</button>
+        <button class="btn btn-full btn-muted" id="tp-pvt" onclick="setRoomType('private')">🔒 Private</button>
+      </div>
+      <button class="btn btn-cyan btn-full" onclick="createRoom()">⚡ Create Room</button>
+    </div>
+    <div id="tab-join-body" style="display:none">
+      <input id="join-code-inp" class="inp" placeholder="ABC123" maxlength="6"
+        style="font-family:'Orbitron',monospace;font-size:1.4rem;letter-spacing:.3em;text-align:center;text-transform:uppercase;margin-bottom:.875rem"/>
+      <button class="btn btn-green btn-full" onclick="joinRoom()">🚪 Join Room</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-add-friend" class="overlay">
+  <div class="modal" style="max-width:380px">
+    <button class="modal-x" onclick="closeModals()">✕</button>
+    <div class="modal-title">👥 Add Friend</div>
+    <label class="inp-label">Search by name</label>
+    <input id="af-inp" class="inp" placeholder="Enter player name..." style="margin-bottom:1rem"/>
+    <div id="af-results" style="margin-bottom:1rem"></div>
+    <button class="btn btn-green btn-full" onclick="searchFriend()">🔍 Search</button>
+  </div>
+</div>
+
+<!-- JavaScript Modules -->
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/websocket.js"></script>
+<script src="js/ui/toast.js"></script>
+<script src="js/ui/nav.js"></script>
+<script src="js/ui/modal.js"></script>
+<script src="js/ui/leaderboard.js"></script>
+<script src="js/ui/chat.js"></script>
+<script src="js/ui/friends.js"></script>
+<script src="js/ui/room.js"></script>
+<script src="js/games/quiz.js"></script>
+<script src="js/games/reflex.js"></script>
+<script src="js/games/wordbomb.js"></script>
+<script src="js/games/memory.js"></script>
+<script src="js/games/typerace.js"></script>
+<script src="js/results.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
