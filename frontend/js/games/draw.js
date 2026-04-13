@@ -158,13 +158,30 @@ function _dgOnUp()    { DG.isDrawing = false; }
 
 function _dgOnTouchStart(e) {
   e.preventDefault();
+  if (DG.phase !== 'drawing') return;
+  if (DG.drawingPlayer !== S.name) return;
   const touch = e.touches[0];
-  _dgOnDown({ clientX: touch.clientX, clientY: touch.clientY });
+  const { x, y } = _dgGetPos({ clientX: touch.clientX, clientY: touch.clientY });
+  DG.isDrawing = true;
+  DG.lastX = x; DG.lastY = y;
+  if (DG.tool === 'fill') { _dgFloodFill(Math.round(x), Math.round(y)); return; }
+  DG.ctx.beginPath();
+  DG.ctx.arc(x, y, DG.brushSize / 2, 0, Math.PI * 2);
+  DG.ctx.fillStyle = DG.tool === 'eraser' ? '#1e2230' : DG.color;
+  DG.ctx.fill();
+  _dgBroadcastDraw({ type: 'dot', x, y, color: DG.tool === 'eraser' ? '#1e2230' : DG.color, size: DG.brushSize });
 }
 function _dgOnTouchMove(e) {
   e.preventDefault();
+  if (!DG.isDrawing || DG.phase !== 'drawing') return;
+  if (DG.drawingPlayer !== S.name) return;
   const touch = e.touches[0];
-  _dgOnMove({ clientX: touch.clientX, clientY: touch.clientY });
+  const { x, y } = _dgGetPos({ clientX: touch.clientX, clientY: touch.clientY });
+  if (DG.tool !== 'fill') {
+    _dgDrawLine(DG.lastX, DG.lastY, x, y, DG.tool === 'eraser' ? '#1e2230' : DG.color, DG.brushSize);
+    _dgBroadcastDraw({ type: 'line', x1: DG.lastX, y1: DG.lastY, x2: x, y2: y, color: DG.tool === 'eraser' ? '#1e2230' : DG.color, size: DG.brushSize });
+  }
+  DG.lastX = x; DG.lastY = y;
 }
 
 function _dgDrawLine(x1, y1, x2, y2, color, size) {
