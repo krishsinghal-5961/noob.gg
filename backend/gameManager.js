@@ -17,6 +17,7 @@ const GAME_DURATIONS = {
   pattern:  120_000,  // 2 min — up to 12 rounds
   typerace: 180_000,  // 3 min
   quiz:     200_000,  // 10 questions × ~20s
+  draw:     480_000,  // 8 min — 3 rounds × multiple players
 };
 
 /* ── START GAME ── */
@@ -34,6 +35,17 @@ async function startGame(redis, broadcast, code) {
   room.players.forEach(p => { p.score = 0; });
   room.status    = 'playing';
   room.startedAt = Date.now();
+
+  // Draw & Guess: init turn state
+  if (room.game === 'draw') {
+    room.dgTurn        = 1;
+    room.dgTotalRounds = 3;
+    room.dgDrawer      = room.players[0]?.name || '';
+    room.dgSecret      = '';
+    room.dgHint        = '';
+    room.dgGuessed     = [];
+  }
+
   await saveRoom(redis, room);
 
   // Broadcast game start to everyone in the room

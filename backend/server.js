@@ -329,6 +329,127 @@ async function handleMessage(sock, type, payload, getName, setName) {
     }
 
     /* ════════════════════════════════
+       DRAW & GUESS — drawing, guessing, turn management
+    ════════════════════════════════ */
+    case 'DG_TURN_START': {
+      const name = getName();
+      if (!name) return err('Not authenticated');
+      const room = await roomMgr.getPlayerRoom(redis, name);
+      if (!room) return;
+      // Broadcast turn start to everyone so all clients sync drawer + round
+      broadcastRoom(room.code, {
+        type: 'DG_TURN_START',
+        payload: { drawer: payload.drawer || room.dgDrawer, round: payload.round || room.dgTurn || 1 },
+      });
+      break;
+    }
+
+    case 'DG_WORD_CHOSEN': {
+      const name = getName();
+      if (!name) return err('Not authenticated');
+      const room = await roomMgr.getPlayerRoom(redis, name);
+      if (!room) return;
+      // Store secret word server-side for validation (never rebroadcast)
+      room.dgSecret  = (payload._word || '').toLowerCase();
+      room.dgHint    = payload.hint || '';
+      room.dgDrawer  = payload.drawer || name;
+      room.dgGuessed = [];
+      if (!room.dgTurn)        room.dgTurn = 1;
+      if (!room.dgTotalRounds) room.dgTotalRounds = 3;
+      await roomMgr.saveRoom(redis, room);
+      // Broadcast hint + drawer info to all (NOT the actual word)
+      broadcastRoom(room.code, {
+        type: 'DG_WORD_CHOSEN',
+        payload: { drawer: payload.drawer, hint: payload.hint, wordLen: payload.wordLen, round: payload.round },
+      });
+      break;
+    }
+
+    case 'DG_DRAW': {
+      const name = getName();
+      if (!name) return err('Not authenticated');
+      const room = await roomMgr.getPlayerRoom(redis, name);
+      if (!room) return;
+      // Relay draw data to everyone except the sender
+      const drawMsg = { type: 'DG_DRAW', payload: { drawData: payload.drawData } };
+      const allPlayers = room.players || [];
+      for (const p of allPlayers) {
+        if (p.name !== name) sendTo(p.name, drawMsg);
+      }
+      break;
+    }
+
+    case 'DG_GUESS': {
+      const name = getName();
+      if (!name) return err('Not authenticated');
+      const room = await roomMgr.getPlayerRoom(redis, name);
+      if (!room) return;
+
+      const guess = (payload.guess || '').trim().toLowerCase();
+      const secret = (room.dgSecret || '').toLowerCase();
+
+      if (!secret) {
+        // No word chosen yet — broadcast guess as chat
+        broadcastRoom(room.code, {
+          type: 'DG_GUESS_RESULT',
+          payload: { name, guess: payload.guess, correct: false },
+        });
+        break;
+      }
+
+      const isCorrect = guess === secret;
+      if (isCorrect) {
+        // Award points based on time remaining (sent from client as secsLeft)
+        const secsLeft = typeof payload.secsLeft === 'number' ? payload.secsLeft : 40;
+        const points   = Math.max(50, Math.round(100 + secsLeft * 5));
+        room.players   = room.players || [];
+
+        // Give guesser points
+        const guesserP = room.players.find(p => p.name === name);
+        if (guesserP) guesserP.score = (guesserP.score || 0) + points;
+
+        // Give drawer a smaller bonus
+        const drawerP = room.players.find(p => p.name === room.dgDrawer);
+        if (drawerP) drawerP.score = (drawerP.score || 0) + 30;
+
+        // Reveal one more letter in hint
+        const updatedHint = _dgRevealHint(room.dgHint || '', secret);
+        room.dgHint = updatedHint;
+
+        await roomMgr.saveRoom(redis, room);
+
+        broadcastRoom(room.code, {
+          type: 'DG_GUESS_RESULT',
+          payload: { name, correct: true, points, hint: updatedHint },
+        });
+
+        // Check if all non-drawers guessed
+        const nonDrawers = room.players.filter(p => p.name !== room.dgDrawer);
+        if (!room.dgGuessed) room.dgGuessed = [];
+        if (!room.dgGuessed.includes(name)) room.dgGuessed.push(name);
+        if (room.dgGuessed.length >= nonDrawers.length) {
+          await _dgEndRound(redis, broadcastRoom, room.code);
+        }
+      } else {
+        broadcastRoom(room.code, {
+          type: 'DG_GUESS_RESULT',
+          payload: { name, guess: payload.guess, correct: false },
+        });
+      }
+      break;
+    }
+
+    case 'DG_ROUND_END': {
+      const name = getName();
+      if (!name) return err('Not authenticated');
+      const room = await roomMgr.getPlayerRoom(redis, name);
+      if (!room) return;
+      if (room.dgDrawer !== name) return; // only drawer can end their own turn
+      await _dgEndRound(redis, broadcastRoom, room.code);
+      break;
+    }
+
+    /* ════════════════════════════════
        QUICK MATCH — find or create a public room
     ════════════════════════════════ */
     case 'QUICK_MATCH': {
@@ -431,6 +552,59 @@ async function handleMessage(sock, type, payload, getName, setName) {
     default:
       console.log('[WS] Unknown message type:', type);
   }
+}
+
+/* ── DRAW & GUESS HELPERS ── */
+
+/** Reveal one more random hidden letter in the hint string */
+function _dgRevealHint(hint, secret) {
+  // hint format: "_ _ _ _ _" (with spaces between)
+  const parts  = hint.split(' ');
+  const hidden = [];
+  parts.forEach((ch, i) => { if (ch === '_') hidden.push(i); });
+  if (!hidden.length) return hint;
+  const revIdx = hidden[Math.floor(Math.random() * hidden.length)];
+  parts[revIdx] = secret[revIdx] || '_';
+  return parts.join(' ');
+}
+
+/** End the current drawing round and advance to the next turn */
+async function _dgEndRound(redis, broadcast, code) {
+  const room = await roomMgr.getRoom(redis, code);
+  if (!room || room.status !== 'playing') return;
+
+  const word        = room.dgSecret || '';
+  const totalTurns  = (room.dgTotalRounds || 3) * (room.players?.length || 1);
+  const currentTurn = (room.dgTurn || 1);
+  const nextTurn    = currentTurn + 1;
+
+  // Build scores map for payload
+  const scores = {};
+  (room.players || []).forEach(p => { scores[p.name] = p.score || 0; });
+
+  // Determine next drawer
+  const playerIdx  = nextTurn % (room.players?.length || 1);
+  const nextDrawer = room.players?.[playerIdx]?.name || room.players?.[0]?.name;
+
+  // Reveal the word and broadcast round-end
+  broadcast(code, {
+    type: 'DG_ROUND_END',
+    payload: { word, scores, nextDrawer, nextRound: nextTurn, drawer: room.dgDrawer },
+  });
+
+  // If all turns done → end game
+  if (nextTurn > totalTurns) {
+    setTimeout(() => gameMgr.endGame(redis, broadcast, code), 3500);
+    return;
+  }
+
+  // Advance turn state
+  room.dgTurn    = nextTurn;
+  room.dgDrawer  = nextDrawer;
+  room.dgSecret  = '';
+  room.dgHint    = '';
+  room.dgGuessed = [];
+  await roomMgr.saveRoom(redis, room);
 }
 
 /* ── START SERVER ── */
