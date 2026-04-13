@@ -184,8 +184,10 @@
         <span class="topbar-title" style="color:var(--c3)">📋 QUIZ SETUP</span>
         <div class="topbar-right"><button class="btn btn-muted btn-sm" onclick="leaveRoom()">✕ Leave</button></div>
       </div>
-      <div class="body">
-        <div class="card">
+      <div class="body" style="padding-bottom:2rem">
+
+        <!-- SETTINGS CARD -->
+        <div class="card" style="margin-bottom:1rem">
           <div class="section-h" style="margin-bottom:1rem"><h2>Settings</h2><div class="line"></div></div>
           <label class="inp-label">Number of Questions</label>
           <div class="q-opts-g" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1.25rem">
@@ -199,8 +201,34 @@
             <button class="btn btn-muted q-time-btn active" onclick="setQTime(20,this)">20s</button>
             <button class="btn btn-muted q-time-btn" onclick="setQTime(30,this)">30s</button>
           </div>
-          <button class="btn btn-cyan btn-full" onclick="startQuiz()">📋 Start Quiz</button>
+          <label class="inp-label" style="margin-bottom:.5rem">Question Source</label>
+          <div style="display:flex;gap:.5rem;margin-bottom:1.5rem">
+            <button class="btn btn-full" id="qs-bank-btn" style="background:rgba(0,229,255,.1);color:var(--c1);border:1px solid rgba(0,229,255,.3)" onclick="setQSource('bank')">📚 Default Bank</button>
+            <button class="btn btn-full btn-muted" id="qs-custom-btn" onclick="setQSource('custom')">✏️ Custom</button>
+          </div>
+          <button class="btn btn-cyan btn-full" onclick="startQuiz()" id="quiz-start-btn">📋 Start Quiz</button>
         </div>
+
+        <!-- CUSTOM QUESTION EDITOR (host only) -->
+        <div id="quiz-editor-panel" style="display:none">
+          <div class="card">
+            <div class="section-h" style="margin-bottom:1rem">
+              <h2 style="color:var(--c3)">✏️ Custom Questions</h2>
+              <div class="line"></div>
+            </div>
+            <div id="custom-q-list" style="margin-bottom:1rem"></div>
+            <button class="btn btn-green btn-full" onclick="addCustomQuestion()">＋ Add Question</button>
+          </div>
+        </div>
+
+        <!-- GUEST VIEW: waiting for host -->
+        <div id="quiz-guest-wait" style="display:none">
+          <div class="card" style="text-align:center;padding:1.5rem">
+            <div style="font-size:1.5rem;margin-bottom:.5rem">⏳</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted)">Waiting for host to configure and start the quiz...</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -383,17 +411,35 @@
   <div class="modal">
     <button class="modal-x" onclick="closeModals()">✕</button>
     <div class="modal-title" id="modal-title">Join or Create</div>
-    <div class="tabs">
-      <button class="tab on" id="tab-create" onclick="switchTab('create')">🏠 Create Room</button>
-      <button class="tab" id="tab-join" onclick="switchTab('join')">🚪 Join Room</button>
+    <div class="tabs" style="margin-bottom:1.25rem">
+      <button class="tab on" id="tab-quick"  onclick="switchTab('quick')">⚡ Quick Match</button>
+      <button class="tab"    id="tab-create" onclick="switchTab('create')">🏠 Create</button>
+      <button class="tab"    id="tab-join"   onclick="switchTab('join')">🚪 Join</button>
     </div>
-    <div id="tab-create-body">
+
+    <!-- QUICK MATCH TAB -->
+    <div id="tab-quick-body">
+      <div style="text-align:center;padding:.5rem 0 1.25rem">
+        <div style="font-size:2.2rem;margin-bottom:.6rem">🎮</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.6">
+          We'll find an open public room for you.<br>If none exists, we'll create one automatically.
+        </div>
+        <div id="mm-status" style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--c4);min-height:1.4em;margin-bottom:1rem"></div>
+      </div>
+      <button id="mm-start-btn"  class="btn btn-cyan btn-full"  onclick="startQuickMatch()" style="margin-bottom:.5rem">⚡ Find Match</button>
+      <button id="mm-cancel-btn" class="btn btn-muted btn-full"  onclick="cancelMatchmaking()" style="display:none">✕ Cancel Search</button>
+    </div>
+
+    <!-- CREATE TAB -->
+    <div id="tab-create-body" style="display:none">
       <div style="display:flex;gap:.5rem;margin-bottom:1.1rem">
         <button class="btn btn-full" id="tp-pub" style="background:rgba(57,255,148,.1);color:var(--c4);border:1px solid rgba(57,255,148,.3)" onclick="setRoomType('public')">🌐 Public</button>
         <button class="btn btn-full btn-muted" id="tp-pvt" onclick="setRoomType('private')">🔒 Private</button>
       </div>
       <button class="btn btn-cyan btn-full" onclick="createRoom()">⚡ Create Room</button>
     </div>
+
+    <!-- JOIN TAB -->
     <div id="tab-join-body" style="display:none">
       <input id="join-code-inp" class="inp" placeholder="ABC123" maxlength="6"
         style="font-family:'Orbitron',monospace;font-size:1.4rem;letter-spacing:.3em;text-align:center;text-transform:uppercase;margin-bottom:.875rem"/>
