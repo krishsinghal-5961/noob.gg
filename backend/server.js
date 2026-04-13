@@ -319,6 +319,16 @@ async function handleMessage(sock, type, payload, getName, setName) {
       break;
     }
 
+    case 'WB_TURN': {
+      // Relay turn change to all players in the room so clients stay in sync
+      const name = getName();
+      if (!name) return err('Not authenticated');
+      const room = await roomMgr.getPlayerRoom(redis, name);
+      if (!room) return;
+      broadcastRoom(room.code, { type: 'WB_TURN', payload });
+      break;
+    }
+
     case 'WB_SCORE': {
       const name = getName();
       if (!name) return err('Not authenticated');
