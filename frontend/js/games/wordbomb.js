@@ -199,7 +199,9 @@ function bombExplodes() {
 
   renderWBPlayers();
   const alive = WB.players.filter(x => x.alive);
-  if (alive.length <= 1) { setTimeout(endWordBomb, 900); return; }
+  const isMultiplayer = WB.players.length > 1;
+  if (isMultiplayer && alive.length <= 1) { setTimeout(endWordBomb, 900); return; }
+  if (!isMultiplayer && alive.length === 0) { setTimeout(endWordBomb, 900); return; }
 
   setTimeout(() => {
     if (bomb) bomb.textContent = '💣';
