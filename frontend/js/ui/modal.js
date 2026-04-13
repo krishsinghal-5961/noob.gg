@@ -21,6 +21,7 @@ function openModal(game) {
     pattern:  '🧠 Memory Lock',
     typerace: '⌨️ Type Race',
     quiz:     '📋 Quiz Battle',
+    draw:     '🎨 Draw & Guess',
   };
   document.getElementById('modal-title').textContent = names[game] || 'Join Game';
   switchTab('quick');

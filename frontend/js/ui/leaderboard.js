@@ -10,6 +10,7 @@ function renderLB() {
     { key:'pattern',  icon:'🧠', name:'Memory Lock',   unit:'pts', low:false },
     { key:'typerace', icon:'⌨️', name:'Type Race',     unit:'WPM', low:false },
     { key:'quiz',     icon:'📋', name:'Quiz Battle',   unit:'pts', low:false },
+    { key:'draw',     icon:'🎨', name:'Draw & Guess',  unit:'pts', low:false },
   ];
 
   const grid = document.getElementById('lb-grid');

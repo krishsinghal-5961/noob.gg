@@ -36,6 +36,7 @@ function renderRoom() {
     pattern:  '🧠 Memory Lock',
     typerace: '⌨️ Type Race',
     quiz:     '📋 Quiz Battle',
+    draw:     '🎨 Draw & Guess',
   };
   const titleEl = document.getElementById('room-game-title');
   if (titleEl) titleEl.textContent = gameNames[S.game] || 'Game Room';
@@ -113,4 +114,5 @@ function _launchGame(game) {
   else if (game === 'wordbomb') startWordBomb();
   else if (game === 'pattern')  startPattern();
   else if (game === 'typerace') startTypeRace();
+  else if (game === 'draw')     startDrawGuess();
 }
