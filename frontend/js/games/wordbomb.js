@@ -6,20 +6,42 @@
 const WB = {
   rnd: 0, cur: 0, tLeft: 0, total: 0,
   timer: null, players: [], syl: '',
-  used: new Set(), done: false
+  used: new Set(), done: false,
+  dictCache: new Map()   // word (lowercase) → true | false
 };
 
-function isValidWord(word, syl) {
+/**
+ * Quick synchronous checks before hitting the network.
+ * Returns { ok: false, reason } if the word fails a local rule,
+ * or null to mean "needs dictionary lookup".
+ */
+function quickCheck(word, syl) {
   const w = word.toUpperCase();
   const s = syl.toUpperCase();
-  if (!w.includes(s))          return { ok: false, reason: `Must contain "${s}"` };
-  if (w.length < 3)            return { ok: false, reason: 'Too short (min 3 letters)' };
-  if (!/^[A-Z]+$/.test(w))     return { ok: false, reason: 'Letters only!' };
-  const known = SYLLABLE_VALID_WORDS[s] || [];
-  if (known.includes(w))       return { ok: true };
-  if (WORD_DICT.has(w.toLowerCase())) return { ok: true };
-  if (w.length >= 7)           return { ok: true };
-  return { ok: false, reason: `"${w}" not recognised as a valid word` };
+  if (!/^[A-Z]+$/.test(w))  return { ok: false, reason: 'Letters only!' };
+  if (w.length < 3)          return { ok: false, reason: 'Too short (min 3 letters)' };
+  if (!w.includes(s))        return { ok: false, reason: `Must contain "${s}"` };
+  return null; // passed local checks — needs real dictionary validation
+}
+
+/**
+ * Looks up a word against the free DictionaryAPI.dev.
+ * Results are cached in WB.dictCache so repeat lookups are instant.
+ * Returns true if the word is real, false if not found / gibberish.
+ */
+async function lookupWord(word) {
+  const key = word.toLowerCase();
+  if (WB.dictCache.has(key)) return WB.dictCache.get(key);
+  try {
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(key)}`);
+    const valid = res.ok; // 200 = real word, 404 = not found
+    WB.dictCache.set(key, valid);
+    return valid;
+  } catch {
+    // Network error — fail open so a connection hiccup doesn't kill the game
+    WB.dictCache.set(key, true);
+    return true;
+  }
 }
 
 function startWordBomb() {
@@ -103,7 +125,7 @@ function setWBFeedback(msg, type) {
   el.className   = 'wb-feedback ' + (type || '');
 }
 
-function submitWBWord() {
+async function submitWBWord() {
   const inp  = document.getElementById('wb-inp');
   const word = inp.value.trim().toUpperCase();
   if (!word) return;
@@ -114,11 +136,37 @@ function submitWBWord() {
     return;
   }
 
-  const check = isValidWord(word, WB.syl);
-  if (!check.ok) {
-    setWBFeedback(check.reason, 'err');
+  // Step 1 — instant local checks (no network)
+  const local = quickCheck(word, WB.syl);
+  if (local && !local.ok) {
+    setWBFeedback(local.reason, 'err');
     flashWBInp('bad');
     inp.value = '';
+    return;
+  }
+
+  // Step 2 — real dictionary lookup (pause timer so network lag doesn't cost the player)
+  setWBFeedback('Checking…', '');
+  inp.disabled = true;
+  clearInterval(WB.timer);
+  const isReal = await lookupWord(word);
+  inp.disabled = false;
+
+  if (!isReal) {
+    setWBFeedback(`"${word}" isn't a real word!`, 'err');
+    flashWBInp('bad');
+    inp.value = '';
+    inp.focus();
+    // Resume the timer so the turn keeps ticking
+    WB.timer = setInterval(() => {
+      WB.tLeft -= 0.1;
+      const pct  = Math.max(0, WB.tLeft / WB.total * 100);
+      const tbar = document.getElementById('wb-tbar');
+      if (tbar) tbar.style.width = pct + '%';
+      const bomb = document.getElementById('wb-bomb');
+      if (bomb) bomb.className = 'wb-bomb ' + (WB.tLeft > WB.total * .6 ? 'slow' : WB.tLeft > WB.total * .25 ? 'med' : 'fast');
+      if (WB.tLeft <= 0) { clearInterval(WB.timer); bombExplodes(); }
+    }, 100);
     return;
   }
 
