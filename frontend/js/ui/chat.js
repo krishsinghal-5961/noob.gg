@@ -12,6 +12,14 @@ function initChat() {
   CHAT_CHANNELS.forEach(ch => { S.chatMessages[ch.id] = []; });
   renderChatRooms();
   switchChatChannel('global');
+
+  // Allow sending with Enter key
+  const inp = document.getElementById('chat-inp');
+  if (inp) {
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+    });
+  }
 }
 
 function renderChatRooms() {
@@ -80,6 +88,8 @@ function renderChatMsgs() {
  * Called by websocket.js on CHAT_MSG event.
  */
 function addChatMsg(ch, author, text) {
+  // Normalize: strip "room:" prefix so keys match S.chatChannel values
+  ch = ch.replace(/^room:/, '');
   const now = new Date();
   const t   = now.getHours().toString().padStart(2, '0') + ':' +
               now.getMinutes().toString().padStart(2, '0');
@@ -110,6 +120,14 @@ function sendChat() {
   inp.value = '';
   renderChatMsgs();
 
-  // Broadcast to server
-  wsSendChat(S.chatChannel, v);
+  // For room channels, send the full "room:{code}" key the server expects.
+  // For global sub-channels (gaming, off-topic) and global itself, send as-is.
+  const serverChannel = (S.chatChannel !== 'global' &&
+                         S.chatChannel !== 'gaming' &&
+                         S.chatChannel !== 'off-topic' &&
+                         S.code)
+    ? `room:${S.chatChannel}`
+    : S.chatChannel;
+
+  wsSendChat(serverChannel, v);
 }
