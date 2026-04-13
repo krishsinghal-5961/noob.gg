@@ -532,11 +532,14 @@ async function handleMessage(sock, type, payload, getName, setName) {
 
       const msg = await chatMgr.saveMessage(redis, { channel, author: name, text });
 
-      if (channel === 'global') {
+      if (channel === 'global' || channel === 'gaming' || channel === 'off-topic') {
         broadcastAll({ type: 'CHAT_MSG', payload: msg });
-      } else {
+      } else if (channel.startsWith('room:')) {
         const code = channel.replace('room:', '');
         broadcastRoom(code, { type: 'CHAT_MSG', payload: msg });
+      } else {
+        // Unknown channel — treat as global
+        broadcastAll({ type: 'CHAT_MSG', payload: msg });
       }
       break;
     }
