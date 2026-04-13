@@ -117,9 +117,12 @@ const ws = {
         S.code   = payload.code;
         S.isHost = true;
         S.players = payload.room ? payload.room.players : [{ name: S.name, isHost: true, ready: false, color: '#00e5ff' }];
+        if (typeof stopMatchmaking === 'function') stopMatchmaking();
+        closeModals();
         showPage('pg-room');
         hideBottomNav();
         renderRoom();
+        toast('Room created! Share code: ' + payload.code, 'ok');
         break;
 
       case 'ROOM_JOINED':
@@ -127,9 +130,12 @@ const ws = {
         S.players = payload.players || [];
         S.isHost  = payload.isHost || false;
         S.game    = payload.game || S.game;
+        if (typeof stopMatchmaking === 'function') stopMatchmaking();
+        closeModals();
         showPage('pg-room');
         hideBottomNav();
         renderRoom();
+        toast('Joined room ' + payload.code + '!', 'ok');
         break;
 
       case 'CHAT_HISTORY':
@@ -165,7 +171,21 @@ const ws = {
 
       /* ── GAME EVENTS ── */
       case 'GAME_START':
-        _launchGame(S.game);
+        if (S.game === 'quiz') {
+          // Show quiz setup to all players; host configures, guests wait
+          showPage('pg-quiz-setup');
+          hideBottomNav();
+          if (typeof renderQuizSetup === 'function') renderQuizSetup();
+        } else {
+          _launchGame(S.game);
+        }
+        break;
+
+      case 'QUIZ_LAUNCH':
+        // Host pressed Start Quiz — tell all players to begin
+        if (payload.questions) QZ.qs = payload.questions;
+        if (payload.secs) S.quizSecs = payload.secs;
+        if (typeof _launchQuiz === 'function') _launchQuiz();
         break;
 
       /* ── CHAT ── */
