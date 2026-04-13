@@ -329,6 +329,69 @@ async function handleMessage(sock, type, payload, getName, setName) {
     }
 
     /* ════════════════════════════════
+       QUICK MATCH — find or create a public room
+    ════════════════════════════════ */
+    case 'QUICK_MATCH': {
+      const name = getName();
+      if (!name) return err('Not authenticated');
+
+      const { game } = payload;
+      if (!game) return err('Game type required');
+
+      // Find an open public room for this game
+      const publicRooms = await roomMgr.getPublicRooms(redis);
+      const match = publicRooms.find(r => r.game === game && r.status === 'waiting' &&
+        r.players.length < parseInt(process.env.MAX_PLAYERS_PER_ROOM || '8'));
+
+      if (match) {
+        // Join existing room
+        const result = await roomMgr.joinRoom(redis, { code: match.code, playerName: name });
+        if (result.error) {
+          // Room might have just filled up — create a new one
+          const room = await roomMgr.createRoom(redis, { hostName: name, game, roomType: 'public' });
+          send({ type: 'ROOM_CREATED', payload: { code: room.code, room } });
+          const history = await chatMgr.getHistory(redis, `room:${room.code}`, 30);
+          send({ type: 'CHAT_HISTORY', payload: { channel: `room:${room.code}`, messages: history } });
+        } else {
+          const { room } = result;
+          send({ type: 'ROOM_JOINED', payload: { code: match.code, room, players: room.players, isHost: false, game: room.game } });
+          const history = await chatMgr.getHistory(redis, `room:${match.code}`, 30);
+          send({ type: 'CHAT_HISTORY', payload: { channel: `room:${match.code}`, messages: history } });
+          broadcastRoom(match.code, { type: 'PLAYER_JOINED', payload: { player: room.players.find(p => p.name === name) } });
+          const sysMsg = await chatMgr.systemMessage(redis, `room:${match.code}`, `${name} joined via Quick Match`);
+          broadcastRoom(match.code, { type: 'CHAT_MSG', payload: sysMsg });
+        }
+      } else {
+        // No room found — create a new public one
+        const room = await roomMgr.createRoom(redis, { hostName: name, game, roomType: 'public' });
+        send({ type: 'ROOM_CREATED', payload: { code: room.code, room } });
+        const history = await chatMgr.getHistory(redis, `room:${room.code}`, 30);
+        send({ type: 'CHAT_HISTORY', payload: { channel: `room:${room.code}`, messages: history } });
+      }
+      break;
+    }
+
+    /* ════════════════════════════════
+       QUIZ_LAUNCH — host sends custom questions to all players
+    ════════════════════════════════ */
+    case 'QUIZ_LAUNCH': {
+      const name = getName();
+      if (!name) return err('Not authenticated');
+
+      const room = await roomMgr.getPlayerRoom(redis, name);
+      if (!room) return err('Not in a room');
+      if (room.hostName !== name) return err('Only the host can launch the quiz');
+
+      const { questions, secs } = payload;
+      // Broadcast quiz questions to all players so they all play the same set
+      broadcastRoom(room.code, {
+        type: 'QUIZ_LAUNCH',
+        payload: { questions, secs }
+      });
+      break;
+    }
+
+    /* ════════════════════════════════
        CHAT
     ════════════════════════════════ */
     case 'CHAT_MSG': {
