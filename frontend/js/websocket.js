@@ -147,7 +147,8 @@ const ws = {
         break;
 
       case 'PLAYER_JOINED':
-        if (payload.player) S.players.push(payload.player);
+        // Don't push if it's the local player — they're already in S.players from ROOM_JOINED
+        if (payload.player && payload.player.name !== S.name) S.players.push(payload.player);
         renderRoom();
         toast(payload.player.name + ' joined! 👋', 'info');
         break;
