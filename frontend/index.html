@@ -133,6 +133,12 @@
               <div class="gc-desc">Answer faster than your opponents for bonus points. Wrong answers score zero. Speed and accuracy both matter in this knowledge showdown.</div>
               <div class="gc-tags"><span class="gc-tag">Knowledge</span><span class="gc-tag">5–15 Qs</span><span class="gc-tag">Timer</span></div>
             </div>
+            <div class="game-card" style="--cc:var(--c4)" onclick="openModal('draw')">
+              <div class="gc-hd"><span class="gc-icon">🎨</span><span class="gc-badge">✏️ ART</span></div>
+              <div class="gc-name">DRAW &amp; GUESS</div>
+              <div class="gc-desc">One player draws, the rest guess. Pick a secret word, sketch it out, and score points for guessing others fast. Faster guesses = more points!</div>
+              <div class="gc-tags"><span class="gc-tag">Drawing</span><span class="gc-tag">3 Rounds</span><span class="gc-tag">Creative</span></div>
+            </div>
           </div>
         </div>
         <!-- LEADERBOARDS -->
@@ -338,6 +344,84 @@
       </div>
     </div>
 
+    <!-- DRAW & GUESS GAME SCREEN -->
+    <div id="pg-draw" class="game-screen">
+      <div class="game-hd">
+        <span class="game-hd-title" style="color:var(--c4)">🎨 DRAW &amp; GUESS</span>
+        <span class="game-hd-info" id="dg-round-info">Round 1 / 3</span>
+      </div>
+      <div class="dg-body">
+        <!-- Meta bar: word hint + timer -->
+        <div class="dg-meta">
+          <span class="dg-round-info" id="dg-round-info-2">R1</span>
+          <span class="dg-word-display" id="dg-word-display">_ _ _ _ _</span>
+          <span class="dg-timer" id="dg-timer">80s</span>
+        </div>
+
+        <!-- Main 3-column layout -->
+        <div class="dg-main">
+
+          <!-- Left: scoreboard -->
+          <div class="dg-sidebar">
+            <div class="dg-sidebar-hd">Scores</div>
+            <div id="dg-scores"></div>
+          </div>
+
+          <!-- Center: canvas + toolbar + guess -->
+          <div class="dg-center">
+            <div class="dg-canvas-wrap">
+              <canvas id="dg-canvas"></canvas>
+              <!-- Word picker overlay (drawer only) -->
+              <div id="dg-word-picker">
+                <div class="dg-wp-title">🎨 Choose a Word to Draw</div>
+                <div id="dg-word-list"></div>
+              </div>
+            </div>
+
+            <!-- Drawing toolbar -->
+            <div id="dg-toolbar" style="display:none">
+              <div class="dg-colors">
+                <div class="dg-color-swatch active" style="background:#ffffff" onclick="dgSetColor('#ffffff');dgSwatch(this)"></div>
+                <div class="dg-color-swatch" style="background:#ff3d6b" onclick="dgSetColor('#ff3d6b');dgSwatch(this)"></div>
+                <div class="dg-color-swatch" style="background:#ff9800" onclick="dgSetColor('#ff9800');dgSwatch(this)"></div>
+                <div class="dg-color-swatch" style="background:#ffe033" onclick="dgSetColor('#ffe033');dgSwatch(this)"></div>
+                <div class="dg-color-swatch" style="background:#39ff94" onclick="dgSetColor('#39ff94');dgSwatch(this)"></div>
+                <div class="dg-color-swatch" style="background:#00e5ff" onclick="dgSetColor('#00e5ff');dgSwatch(this)"></div>
+                <div class="dg-color-swatch" style="background:#a259ff" onclick="dgSetColor('#a259ff');dgSwatch(this)"></div>
+                <div class="dg-color-swatch" style="background:#1e2230" onclick="dgSetColor('#1e2230');dgSwatch(this)" title="Black"></div>
+                <input type="color" id="dg-color-pick" value="#ffffff" title="Custom color" onchange="dgSetColor(this.value)">
+              </div>
+              <button id="dg-tool-pen"    class="dg-tool-btn active" onclick="dgSetTool('pen')">✏️</button>
+              <button id="dg-tool-eraser" class="dg-tool-btn"        onclick="dgSetTool('eraser')">🧹</button>
+              <button id="dg-tool-fill"   class="dg-tool-btn"        onclick="dgSetTool('fill')">🪣</button>
+              <button class="dg-tool-btn" onclick="dgClearCanvas()">🗑️</button>
+              <div class="dg-brush-wrap">
+                <span>Size</span>
+                <input type="range" min="2" max="30" value="6" oninput="dgSetBrush(this.value)">
+              </div>
+            </div>
+
+            <!-- Guess input (non-drawers) -->
+            <div id="dg-guess-row">
+              <input id="dg-guess-inp" class="dg-guess-inp" placeholder="Type your guess..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                onkeydown="if(event.key==='Enter') dgSubmitGuess()">
+              <button class="btn btn-green btn-sm" onclick="dgSubmitGuess()">Guess</button>
+            </div>
+
+            <!-- Status bar -->
+            <div class="dg-status" id="dg-status">Waiting for game to start...</div>
+          </div>
+
+          <!-- Right: guess chat log -->
+          <div class="dg-chat">
+            <div class="dg-chat-hd">Guesses</div>
+            <div id="dg-msgs"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <!-- RESULTS SCREEN -->
     <div id="pg-results" class="result-screen">
       <div class="res-hero" id="res-hero">🏆 RESULTS</div>
@@ -475,6 +559,17 @@
 <script src="js/games/wordbomb.js"></script>
 <script src="js/games/memory.js"></script>
 <script src="js/games/typerace.js"></script>
+<script src="js/games/draw.js"></script>
+<script>
+function dgSwatch(el) {
+  document.querySelectorAll('.dg-color-swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  DG.tool = 'pen';
+  document.querySelectorAll('.dg-tool-btn').forEach(b => b.classList.remove('active'));
+  const penBtn = document.getElementById('dg-tool-pen');
+  if (penBtn) penBtn.classList.add('active');
+}
+</script>
 <script src="js/results.js"></script>
 <script src="js/main.js"></script>
 </body>
