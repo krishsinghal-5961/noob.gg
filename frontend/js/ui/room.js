@@ -97,8 +97,13 @@ function leaveRoom() {
 
 function startGame() {
   if (!S.game) return;
-  ws.send('START_GAME', {});
-  // Server broadcasts GAME_START to all players in room → _launchGame() called via websocket.js
+  if (S.game === 'quiz') {
+    // Quiz has its own setup page — navigate there first
+    ws.send('START_GAME', {});
+    // Server broadcasts GAME_START → websocket shows pg-quiz-setup for all players
+  } else {
+    ws.send('START_GAME', {});
+  }
 }
 
 /** Called by WS GAME_START event in websocket.js */
