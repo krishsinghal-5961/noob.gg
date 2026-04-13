@@ -140,7 +140,8 @@ const ws = {
 
       case 'CHAT_HISTORY':
         if (payload.messages) {
-          const ch = payload.channel ? payload.channel.replace('room:', '') : 'global';
+          // Server sends channel as "room:ABC" for room chats; strip prefix for frontend key
+          const ch = payload.channel ? payload.channel.replace(/^room:/, '') : 'global';
           payload.messages.forEach(m => addChatMsg(ch, m.author, m.text));
         }
         break;
@@ -189,9 +190,12 @@ const ws = {
         break;
 
       /* ── CHAT ── */
-      case 'CHAT_MSG':
-        addChatMsg(payload.channel || 'global', payload.author, payload.text);
+      case 'CHAT_MSG': {
+        // Normalize channel key: "room:ABC" → "ABC", others kept as-is
+        const ch = (payload.channel || 'global').replace(/^room:/, '');
+        addChatMsg(ch, payload.author, payload.text);
         break;
+      }
 
       /* ── SCORE EVENTS ── */
       case 'REFLEX_SCORE':
