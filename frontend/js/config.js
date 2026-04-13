@@ -10,10 +10,6 @@ const APP_VERSION = '1.0.0';
 /* WebSocket server URL — swap this for your actual backend */
 const WS_URL = 'wss://noob-gg.onrender.com/ws';
 
-/* Bot names & colors used for simulated multiplayer */
-const BOT_NAMES = ['Arjun_X', 'Neha_X', 'Rohan_X', 'Priya_X', 'Karan_X'];
-const BOT_COLS  = ['#00e5ff', '#ff3d6b', '#ffe033', '#39ff94', '#c77dff', '#ff8c42'];
-
 /* ── ENGLISH WORD DICTIONARY (subset — enough for Word Bomb) ── */
 const WORD_DICT = new Set(`
 able about above accept access account across act action active actual add address
@@ -89,11 +85,11 @@ const QUIZ_BANK = [
 
 /* ── LEADERBOARD SEED DATA ── */
 const LB = {
-  reflex:   [{name:'Arjun',score:187},{name:'Priya',score:211},{name:'Rohan',score:245}],
-  wordbomb: [{name:'Neha',score:14},{name:'Arjun',score:11},{name:'Karan',score:9}],
-  pattern:  [{name:'Priya',score:9},{name:'Rohan',score:7},{name:'Neha',score:6}],
-  typerace: [{name:'Arjun',score:118,u:'WPM'},{name:'Neha',score:102,u:'WPM'},{name:'Rohan',score:91,u:'WPM'}],
-  quiz:     [{name:'Rohan',score:5200},{name:'Priya',score:4800},{name:'Arjun',score:4100}],
+  reflex:   [],
+  wordbomb: [],
+  pattern:  [],
+  typerace: [],
+  quiz:     [],
 };
 
 /* ── TYPE RACE ROUND DEFINITIONS ── */
@@ -133,9 +129,3 @@ const CHAT_CHANNELS = [
   {id:'gaming',   icon:'🎮', name:'Gaming',    sub:'Game talk'},
   {id:'off-topic',icon:'💬', name:'Off-Topic', sub:'Chill chat'},
 ];
-
-const BOT_MSGS = {
-  global:     ["gg everyone", "anyone up for a quiz?", "my reflex is getting better 😤", "this platform is 🔥", "who wants to play word bomb?", "just hit 145 WPM on type race!", "anyone else find memory lock insane?"],
-  gaming:     ["bro that reflex arena is addicting", "word bomb strategy: always use words with common endings", "type race round 3 is brutal lol", "memory lock at round 8 is where I keep dying"],
-  'off-topic':["what's everyone studying?", "anyone deploying to Vercel too?", "this was built for a college project 😂", "the quiz battle UI looks exactly like kahoot!"],
-};

@@ -28,34 +28,22 @@ function enterLobby() {
   navTo('lobby');
   toast('Welcome, ' + v + '! 🎮', 'ok');
 
-  // Attempt WebSocket connection
-  ws.connect(WS_URL);   // ← Uncomment when backend is ready
-  ws.send('AUTH', { name: v });
+  // Connect to WebSocket server and authenticate
+  ws.connect(WS_URL);
 }
 
 function _initPlayerData() {
   S.myStats = {
-    reflex:      Math.round(200 + Math.random() * 200),
-    wordbomb:    Math.floor(5   + Math.random() * 10),
-    pattern:     Math.floor(3   + Math.random() * 7),
-    typerace:    Math.floor(60  + Math.random() * 60),
-    quiz:        Math.floor(1000 + Math.random() * 4000),
-    gamesPlayed: Math.floor(10  + Math.random() * 50),
-    wins:        Math.floor(3   + Math.random() * 20),
+    reflex:      0,
+    wordbomb:    0,
+    pattern:     0,
+    typerace:    0,
+    quiz:        0,
+    gamesPlayed: 0,
+    wins:        0,
   };
 
-  S.friends = BOT_NAMES.slice(0, 4).map((n, i) => ({
-    name:   n,
-    online: Math.random() > .4,
-    stats: {
-      reflex:      Math.round(200 + Math.random() * 300),
-      typerace:    Math.floor(50  + Math.random() * 80),
-      quiz:        Math.floor(1000 + Math.random() * 5000),
-      wins:        Math.floor(2   + Math.random() * 25),
-      gamesPlayed: Math.floor(8   + Math.random() * 50),
-    }
-  }));
-
+  S.friends = [];
   renderFriendsList();
 }
 
@@ -103,4 +91,3 @@ if (chatInpEl) chatInpEl.addEventListener('keydown', e => { if (e.key === 'Enter
 document.getElementById('app').classList.add('pre-login');
 
 console.log(`%c🎮 ${APP_NAME} v${APP_VERSION} ready`, 'color:#00e5ff;font-family:monospace;font-weight:bold;font-size:14px');
-console.log('%cTo connect backend: uncomment ws.connect(WS_URL) in main.js and wire up your server.', 'color:#4e566e;font-family:monospace;font-size:11px');
