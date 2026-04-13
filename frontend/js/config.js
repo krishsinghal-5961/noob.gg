@@ -90,6 +90,7 @@ const LB = {
   pattern:  [],
   typerace: [],
   quiz:     [],
+  draw:     [],
 };
 
 /* ── TYPE RACE ROUND DEFINITIONS ── */

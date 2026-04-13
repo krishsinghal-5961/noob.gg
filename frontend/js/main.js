@@ -39,6 +39,7 @@ function _initPlayerData() {
     pattern:     0,
     typerace:    0,
     quiz:        0,
+    draw:        0,
     gamesPlayed: 0,
     wins:        0,
   };
@@ -57,6 +58,12 @@ function resetGames() {
   WB.done = true;
   clearInterval(TR.interval);
   S.players.forEach(p => { p._trDone = false; });
+  // Draw & Guess cleanup
+  if (typeof DG !== 'undefined') {
+    clearInterval(DG.roundTimer);
+    DG.phase = 'idle';
+    DG.isDrawing = false;
+  }
 }
 
 function goLobby() {

@@ -227,6 +227,31 @@ const ws = {
         // Server sends final results
         break;
 
+      /* ── DRAW & GUESS ── */
+      case 'DG_TURN_START':
+        if (typeof dgOnTurnStart === 'function') dgOnTurnStart(payload);
+        break;
+
+      case 'DG_WORD_CHOSEN':
+        if (typeof dgOnWordChosen === 'function') dgOnWordChosen(payload);
+        break;
+
+      case 'DG_DRAW':
+        if (typeof dgOnDrawData === 'function') dgOnDrawData(payload);
+        break;
+
+      case 'DG_GUESS_RESULT':
+        if (typeof dgOnGuessResult === 'function') dgOnGuessResult(payload);
+        break;
+
+      case 'DG_ROUND_END':
+        if (typeof dgOnRoundEnd === 'function') dgOnRoundEnd(payload);
+        break;
+
+      case 'DG_HINT':
+        if (typeof dgOnHintUpdate === 'function') dgOnHintUpdate(payload);
+        break;
+
       /* ── ERROR ── */
       case 'ERROR':
         toast('Server: ' + payload.message, 'err');
