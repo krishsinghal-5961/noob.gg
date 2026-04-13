@@ -323,3 +323,21 @@
 .b-host   { background: rgba(255,224,51,.1);  color: var(--c3); border: 1px solid rgba(255,224,51,.25); }
 .b-ready  { background: rgba(57,255,148,.1);  color: var(--c4); border: 1px solid rgba(57,255,148,.25); }
 .b-wait   { background: rgba(78,86,110,.1);   color: var(--muted); border: 1px solid var(--border); }
+
+/* ── QUICK MATCH PULSE ANIMATION ── */
+@keyframes mmPulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .6; transform: scale(.96); }
+}
+
+.mm-searching {
+  animation: mmPulse 1.4s ease-in-out infinite;
+}
+
+/* ── CUSTOM QUESTION CARD ── */
+.cq-card textarea:focus,
+.cq-card input:focus {
+  outline: none;
+  border-color: rgba(0,229,255,.4) !important;
+  box-shadow: 0 0 0 2px rgba(0,229,255,.08);
+}
