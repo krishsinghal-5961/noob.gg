@@ -110,15 +110,7 @@ function sendChat() {
   if (!v)       { toast('Type a message first!', 'err'); return; }
   if (!S.name)  { toast('Enter your name first!', 'err'); return; }
 
-  const now = new Date();
-  const t   = now.getHours().toString().padStart(2, '0') + ':' +
-              now.getMinutes().toString().padStart(2, '0');
-
-  (S.chatMessages[S.chatChannel] = S.chatMessages[S.chatChannel] || [])
-    .push({ author: S.name, text: v, time: t });
-
   inp.value = '';
-  renderChatMsgs();
 
   // For room channels, send the full "room:{code}" key the server expects.
   // For global sub-channels (gaming, off-topic) and global itself, send as-is.
