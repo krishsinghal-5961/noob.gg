@@ -227,6 +227,17 @@ const ws = {
         }
         break;
 
+      /* ── WORD BOMB ── */
+      case 'WB_TURN':
+        // Only update non-active players — the sender already called startWBTurn locally
+        if (typeof wbOnTurn === 'function' && payload.cur !== undefined) {
+          const activePlayer = WB?.players?.[payload.cur];
+          if (!activePlayer || activePlayer.name !== S.name) {
+            wbOnTurn(payload.cur, payload.syl, payload.lives);
+          }
+        }
+        break;
+
       /* ── GAME RESULTS ── */
       case 'GAME_END':
         // Server sends final results
