@@ -585,8 +585,8 @@ async function _dgEndRound(redis, broadcast, code) {
   const scores = {};
   (room.players || []).forEach(p => { scores[p.name] = p.score || 0; });
 
-  // Determine next drawer
-  const playerIdx  = nextTurn % (room.players?.length || 1);
+  // Determine next drawer — use currentTurn so index advances one step at a time
+  const playerIdx  = currentTurn % (room.players?.length || 1);
   const nextDrawer = room.players?.[playerIdx]?.name || room.players?.[0]?.name;
 
   // Reveal the word and broadcast round-end
