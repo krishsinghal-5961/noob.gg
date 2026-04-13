@@ -696,3 +696,96 @@
   color: var(--c1);
   transform: translateY(-2px);
 }
+
+/* ── MOBILE: Draw & Guess ── */
+@media (max-width: 600px) {
+  /* Stack sidebar below canvas, hide right chat panel in favour of the guess row */
+  .dg-main {
+    flex-direction: column;
+  }
+
+  /* Sidebar becomes a compact horizontal score strip */
+  .dg-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: 38px;
+    flex-shrink: 0;
+  }
+  .dg-sidebar-hd {
+    white-space: nowrap;
+    border-bottom: none;
+    border-right: 1px solid var(--border);
+    padding: .3rem .6rem;
+  }
+  #dg-scores {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0;
+  }
+  .dg-score-row {
+    flex-direction: column;
+    align-items: center;
+    padding: .2rem .5rem;
+    border-bottom: none;
+    border-right: 1px solid var(--border);
+    gap: 0;
+    min-width: 55px;
+  }
+  .dg-sname { max-width: 52px; font-size: .6rem; }
+  .dg-sval  { font-size: .65rem; }
+
+  /* Give canvas more vertical space */
+  .dg-canvas-wrap {
+    min-height: 52vw;
+  }
+
+  /* Right chat panel: hide it on mobile (guesses show in guess-row area) */
+  .dg-chat {
+    display: none;
+  }
+
+  /* Toolbar: make swatches and buttons finger-friendly */
+  .dg-colors {
+    gap: .4rem;
+    flex-wrap: wrap;
+  }
+  .dg-color-swatch {
+    width: 28px;
+    height: 28px;
+  }
+  .dg-tool-btn {
+    font-size: .85rem;
+    padding: .4rem .65rem;
+    min-width: 36px;
+    min-height: 36px;
+  }
+  #dg-color-pick {
+    width: 30px;
+    height: 30px;
+  }
+  .dg-brush-wrap input[type=range] {
+    width: 80px;
+  }
+
+  /* Word picker buttons: easier to tap */
+  .dg-word-btn {
+    padding: .9rem 1rem;
+    font-size: .8rem;
+  }
+
+  /* Meta bar: tighter on mobile */
+  .dg-meta {
+    padding: .35rem .6rem;
+  }
+  .dg-word-display {
+    font-size: .85rem;
+  }
+}
