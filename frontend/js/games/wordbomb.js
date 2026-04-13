@@ -169,8 +169,33 @@ function passWBBomb() {
       nxt = (nxt + 1) % WB.players.length;
     }
     WB.cur = nxt;
+    // Broadcast the new turn so all other clients sync — include lives so hearts stay correct
+    const lives = WB.players.map(p => ({ name: p.name, lives: p.lives, alive: p.alive }));
+    ws.send('WB_TURN', { cur: WB.cur, syl: WB.syl, lives });
     startWBTurn();
   }, 600);
+}
+
+/**
+ * Called by websocket.js when a WB_TURN event arrives from the server.
+ * Updates this client's turn state to match the sender's.
+ */
+function wbOnTurn(cur, syl, lives) {
+  if (WB.done) return;
+  WB.cur = cur;
+  if (syl) {
+    WB.syl = syl;
+    const el = document.getElementById('wb-syl');
+    if (el) el.textContent = WB.syl;
+  }
+  // Sync lives/alive state so hearts and eliminations display correctly
+  if (lives && Array.isArray(lives)) {
+    lives.forEach(({ name, lives: l, alive }) => {
+      const p = WB.players.find(p => p.name === name);
+      if (p) { p.lives = l; p.alive = alive; }
+    });
+  }
+  startWBTurn();
 }
 
 function endWordBomb() {
