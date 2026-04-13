@@ -3,15 +3,22 @@
 ================================================================ */
 'use strict';
 
+const AVATAR_COLORS = ['#00e5ff', '#ff3d6b', '#ffe033', '#39ff94', '#c77dff', '#ff8c42'];
+
 function renderFriendsList() {
   const countEl = document.getElementById('friend-count');
   const listEl  = document.getElementById('friend-list');
   if (countEl) countEl.textContent = S.friends.filter(f => f.online).length;
   if (!listEl) return;
 
+  if (!S.friends.length) {
+    listEl.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);padding:1rem 0;text-align:center">No friends yet — search and add players!</div>`;
+    return;
+  }
+
   listEl.innerHTML = S.friends.map((f, i) => `
     <div class="friend-item" onclick="viewProfile(${i})">
-      <div class="f-avatar" style="background:linear-gradient(135deg,${BOT_COLS[i % BOT_COLS.length]},${BOT_COLS[(i+2) % BOT_COLS.length]})">
+      <div class="f-avatar" style="background:linear-gradient(135deg,${AVATAR_COLORS[i % AVATAR_COLORS.length]},${AVATAR_COLORS[(i+2) % AVATAR_COLORS.length]})">
         ${f.name[0].toUpperCase()}
         <div class="f-online-dot ${f.online ? 'on' : 'off'}"></div>
       </div>
@@ -52,7 +59,7 @@ function viewProfile(idx) {
       </div>
       <div class="profile-info">
         <div class="profile-name">${f.name}${isMe ? ' <span style="font-size:.75rem;color:var(--muted)">(You)</span>' : ''}</div>
-        <div class="profile-since">Member since Feb 2026</div>
+        <div class="profile-since">NOOB.gg Player</div>
         <div class="profile-btns">
           ${!isMe ? `
             <button class="btn btn-green btn-sm" onclick="toast('Friend request sent! 🤝','ok')">+ Add Friend</button>
@@ -114,32 +121,19 @@ function searchFriend() {
   const res = document.getElementById('af-results');
   if (!v) { toast('Enter a name!', 'err'); return; }
 
-  const found = BOT_NAMES.filter(n => n.toLowerCase().includes(v.toLowerCase()));
-  if (!found.length) {
-    res.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted)">No players found.</div>`;
-    return;
-  }
-
-  res.innerHTML = found.map(n => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border)">
-      <span style="font-weight:600">${n}</span>
-      <button class="btn btn-green btn-sm" onclick="addFriend('${n}');this.textContent='✓ Added';this.disabled=true">+ Add</button>
-    </div>
-  `).join('');
+  // Search among currently connected players via server would go here.
+  // For now, show a helpful message.
+  res.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted)">
+    Player search requires both players to be online. Share your room code to play together!
+  </div>`;
 }
 
 function addFriend(name) {
   if (!S.friends.find(f => f.name === name)) {
     S.friends.push({
       name,
-      online: Math.random() > .5,
-      stats: {
-        reflex:      Math.round(200 + Math.random() * 300),
-        typerace:    Math.floor(50  + Math.random() * 80),
-        quiz:        Math.floor(1000 + Math.random() * 5000),
-        wins:        Math.floor(2   + Math.random() * 20),
-        gamesPlayed: Math.floor(8   + Math.random() * 50),
-      }
+      online: false,
+      stats: { reflex: 0, typerace: 0, quiz: 0, wins: 0, gamesPlayed: 0 }
     });
     renderFriendsList();
   }

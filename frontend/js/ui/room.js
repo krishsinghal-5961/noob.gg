@@ -6,7 +6,11 @@
 
 function createRoom() {
   if (!S.name) { toast('Enter your name first!', 'err'); return; }
-  if (!ws.connected) { toast('Not connected to server!', 'err'); return; }
+  if (!S.game) { toast('Select a game first!', 'err'); return; }
+  if (!ws.socket || ws.socket.readyState !== WebSocket.OPEN) {
+    toast('Not connected to server — please wait…', 'err');
+    return;
+  }
   closeModals();
   ws.send('CREATE_ROOM', { game: S.game, roomType: S.roomType || 'public' });
   // Server responds with ROOM_CREATED → handled in websocket.js
@@ -16,7 +20,10 @@ function joinRoom() {
   const code = document.getElementById('join-code-inp').value.trim().toUpperCase();
   if (!code || code.length !== 6) { toast('Enter a valid 6-letter code!', 'err'); return; }
   if (!S.name) { toast('Enter your name first!', 'err'); return; }
-  if (!ws.connected) { toast('Not connected to server!', 'err'); return; }
+  if (!ws.socket || ws.socket.readyState !== WebSocket.OPEN) {
+    toast('Not connected to server — please wait…', 'err');
+    return;
+  }
   closeModals();
   ws.send('JOIN_ROOM', { code });
   // Server responds with ROOM_JOINED → handled in websocket.js
@@ -81,6 +88,9 @@ function copyRoomCode() {
 function leaveRoom() {
   resetGames();
   ws.send('LEAVE_ROOM', {});
+  S.code    = '';
+  S.players = [];
+  S.isHost  = false;
   showPage('pg-lobby');
   showBottomNav();
 }

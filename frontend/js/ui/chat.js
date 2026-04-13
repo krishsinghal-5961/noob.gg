@@ -1,10 +1,5 @@
 /* ================================================================
-   ui/chat.js — Chat System (Channels, Messages, Bot Simulation)
-   
-   BACKEND INTEGRATION:
-   - sendChat() should call wsSendChat() after local insert
-   - addBotMsg() is already called by websocket.js on CHAT_MSG event
-   - Remove the bot simulation interval once real WS is live
+   ui/chat.js — Chat System (Channels, Messages)
 ================================================================ */
 'use strict';
 
@@ -17,22 +12,6 @@ function initChat() {
   CHAT_CHANNELS.forEach(ch => { S.chatMessages[ch.id] = []; });
   renderChatRooms();
   switchChatChannel('global');
-
-  // Seed some initial messages
-  setTimeout(() => addBotMsg('global',    BOT_NAMES[0], "hey everyone! 👋"), 500);
-  setTimeout(() => addBotMsg('global',    BOT_NAMES[1], "who's ready to play?"), 1500);
-  setTimeout(() => addBotMsg('gaming',    BOT_NAMES[2], "word bomb is too hard lmao"), 800);
-
-  // Periodic bot messages — REMOVE when real WebSocket is live
-  setInterval(() => {
-    const ch  = CHAT_CHANNELS[Math.floor(Math.random() * CHAT_CHANNELS.length)].id;
-    const bot = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
-    const pool = BOT_MSGS[ch] || BOT_MSGS.global;
-    addBotMsg(ch, bot, pool[Math.floor(Math.random() * pool.length)]);
-    if (ch !== S.chatChannel) {
-      document.getElementById('chat-notif').classList.add('on');
-    }
-  }, 8000 + Math.random() * 12000);
 }
 
 function renderChatRooms() {
@@ -97,16 +76,20 @@ function renderChatMsgs() {
 }
 
 /**
- * Add a message from another player (or bot).
+ * Add a message from another player.
  * Called by websocket.js on CHAT_MSG event.
  */
-function addBotMsg(ch, author, text) {
+function addChatMsg(ch, author, text) {
   const now = new Date();
   const t   = now.getHours().toString().padStart(2, '0') + ':' +
               now.getMinutes().toString().padStart(2, '0');
   (S.chatMessages[ch] = S.chatMessages[ch] || []).push({ author, text, time: t });
   if (ch === S.chatChannel) renderChatMsgs();
+  else document.getElementById('chat-notif')?.classList.add('on');
 }
+
+/* Keep backward compat alias (websocket.js calls addBotMsg) */
+function addBotMsg(ch, author, text) { addChatMsg(ch, author, text); }
 
 /**
  * Send a chat message (local + broadcast to server).
@@ -127,16 +110,6 @@ function sendChat() {
   inp.value = '';
   renderChatMsgs();
 
-  // Broadcast to server (no-op if not connected)
+  // Broadcast to server
   wsSendChat(S.chatChannel, v);
-
-  // Local bot reply simulation — remove when real WS is live
-  if (Math.random() > .6) {
-    const pool = BOT_MSGS[S.chatChannel] || BOT_MSGS.global;
-    setTimeout(() => addBotMsg(
-      S.chatChannel,
-      BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)],
-      pool[Math.floor(Math.random() * pool.length)]
-    ), 1500 + Math.random() * 3000);
-  }
 }
